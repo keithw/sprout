@@ -35,7 +35,8 @@ private:
 
 public:
 
-  Receiver( const double s_time );
+  Receiver();
+  void warp_to( const double time ) { _time = time; }
   void advance_to( const double time );
   void recv( void );
 

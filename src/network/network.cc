@@ -164,7 +164,9 @@ Connection::Connection( const char *desired_ip, const char *desired_port ) /* se
     SRTT( 1000 ),
     RTTVAR( 500 ),
     have_send_exception( false ),
-    send_exception()
+    send_exception(),
+    forecastr(),
+    forecastr_initialized( false )
 {
   setup();
 
@@ -242,7 +244,7 @@ bool Connection::try_bind( int socket, uint32_t addr, int port )
   for ( int i = search_low; i <= search_high; i++ ) {
     local_addr.sin_port = htons( i );
 
-    if ( bind( socket, (sockaddr *)&local_addr, sizeof( local_addr ) ) == 0 ) {
+    if ( ::bind( socket, (sockaddr *)&local_addr, sizeof( local_addr ) ) == 0 ) {
       return true;
     } else if ( i == search_high ) { /* last port to search */
       fprintf( stderr, "Failed binding to %s:%d\n",
@@ -276,7 +278,9 @@ Connection::Connection( const char *key_str, const char *ip, int port ) /* clien
     SRTT( 1000 ),
     RTTVAR( 500 ),
     have_send_exception( false ),
-    send_exception()
+    send_exception(),
+    forecastr(),
+    forecastr_initialized( false )
 {
   setup();
 
@@ -297,6 +301,29 @@ void Connection::send( string s )
 {
   if ( !has_remote_addr ) {
     return;
+  }
+
+  /* debug Sprout */
+  if ( !forecastr_initialized ) {
+    forecastr.warp_to( timestamp_secs() );
+    forecastr_initialized = true;
+  }
+
+  forecastr.advance_to( timestamp_secs() );
+  DeliveryForecast window_forecast( forecastr.forecast() );
+  for ( int i = 0; i < 10; i++ ) {
+    fprintf( stderr, "%f forecast: %d %d %d %d %d %d %d %d %d %d\n",
+	     timestamp_secs(),
+	     window_forecast.counts[ 0 ],
+	     window_forecast.counts[ 1 ],
+	     window_forecast.counts[ 2 ],
+	     window_forecast.counts[ 3 ],
+	     window_forecast.counts[ 4 ],
+	     window_forecast.counts[ 5 ],
+	     window_forecast.counts[ 6 ],
+	     window_forecast.counts[ 7 ],
+	     window_forecast.counts[ 8 ],
+	     window_forecast.counts[ 9 ] );
   }
 
   Packet px = new_packet( s );
@@ -354,6 +381,15 @@ string Connection::recv( void )
   Packet p( string( buf, received_len ), &session );
 
   dos_assert( p.direction == (server ? TO_SERVER : TO_CLIENT) ); /* prevent malicious playback to sender */
+
+  /* Update Sprout */
+  if ( !forecastr_initialized ) {
+    forecastr.warp_to( timestamp_secs() );
+    forecastr_initialized = true;
+  }
+
+  forecastr.advance_to( timestamp_secs() );
+  forecastr.recv();
 
   if ( p.seq >= expected_receiver_seq ) { /* don't use out-of-order packets for timestamp or targeting */
     expected_receiver_seq = p.seq + 1; /* this is security-sensitive because a replay attack could otherwise
@@ -416,6 +452,11 @@ int Connection::port( void ) const
 uint64_t Network::timestamp( void )
 {
   return frozen_timestamp();
+}
+
+double Network::timestamp_secs( void )
+{
+  return (double) timestamp() / 1000.0;
 }
 
 uint16_t Network::timestamp16( void )

@@ -114,6 +114,8 @@ AX_CHECK_COMPILE_FLAG([-fno-default-inline],
   [MISC_CXXFLAGS="$MISC_CXXFLAGS -fno-default-inline"], [], [-Werror])
 AX_CHECK_COMPILE_FLAG([-pipe],
   [MISC_CXXFLAGS="$MISC_CXXFLAGS -pipe"], [], [-Werror])
+AX_CHECK_COMPILE_FLAG([-std=c++0x],
+  [MISC_CXXFLAGS="$MISC_CXXFLAGS -std=c++0x"], [], [-Werror])
 AC_LANG_POP(C++)
 AC_SUBST([MISC_CXXFLAGS])
 

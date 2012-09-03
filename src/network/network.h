@@ -42,6 +42,8 @@
 
 #include "crypto.h"
 
+#include "receiver.hh"
+
 using namespace Crypto;
 
 namespace Network {
@@ -50,6 +52,8 @@ namespace Network {
   uint64_t timestamp( void );
   uint16_t timestamp16( void );
   uint16_t timestamp_diff( uint16_t tsnew, uint16_t tsold );
+
+  double timestamp_secs( void );
 
   class NetworkException {
   public:
@@ -131,6 +135,10 @@ namespace Network {
     Packet new_packet( string &s_payload );
 
     void hop_port( void );
+
+    /* Sprout state */
+    Receiver forecastr;
+    bool forecastr_initialized;
 
   public:
     Connection( const char *desired_ip, const char *desired_port ); /* server */

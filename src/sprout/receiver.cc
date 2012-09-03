@@ -3,13 +3,13 @@
 
 #include "receiver.hh"
 
-Receiver::Receiver( const double s_time )
+Receiver::Receiver()
   : _process( MAX_ARRIVAL_RATE,
 	      BROWNIAN_MOTION_RATE,
 	      OUTAGE_ESCAPE_RATE,
 	      NUM_BINS ),
     _forecastr(),
-    _time( s_time ),
+    _time( 0 ),
     _count_this_tick( 0 )
 {
   for ( int i = 0; i < NUM_TICKS; i++ ) {
@@ -25,6 +25,8 @@ void Receiver::advance_to( const double time )
 {
   assert( time >= _time );
 
+  fprintf( stderr, "Advancing %f => %f (%d)... ", _time, time, _count_this_tick );
+
   while ( _time + TICK_LENGTH < time ) {
     _process.evolve( TICK_LENGTH );
     if ( _count_this_tick ) {
@@ -33,6 +35,8 @@ void Receiver::advance_to( const double time )
     }
     _time += TICK_LENGTH;
   }
+
+  fprintf( stderr, "done.\n" );
 }
 
 void Receiver::recv( void )

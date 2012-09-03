@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([mosh], [1.2.2], [mosh-devel@mit.edu])
+AC_INIT([alfalfa], [1.2.2], [mosh-devel@mit.edu])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_SRCDIR([src/frontend/mosh-client.cc])
@@ -308,6 +308,7 @@ AC_CONFIG_FILES([
   scripts/Makefile
   src/examples/Makefile
   src/tests/Makefile
+  src/sprout/Makefile
   man/Makefile
   conf/Makefile
 ])

@@ -310,21 +310,6 @@ void Connection::send( string s )
   }
 
   forecastr.advance_to( timestamp_secs() );
-  DeliveryForecast window_forecast( forecastr.forecast() );
-  for ( int i = 0; i < 10; i++ ) {
-    fprintf( stderr, "%f forecast: %d %d %d %d %d %d %d %d %d %d\n",
-	     timestamp_secs(),
-	     window_forecast.counts[ 0 ],
-	     window_forecast.counts[ 1 ],
-	     window_forecast.counts[ 2 ],
-	     window_forecast.counts[ 3 ],
-	     window_forecast.counts[ 4 ],
-	     window_forecast.counts[ 5 ],
-	     window_forecast.counts[ 6 ],
-	     window_forecast.counts[ 7 ],
-	     window_forecast.counts[ 8 ],
-	     window_forecast.counts[ 9 ] );
-  }
 
   Packet px = new_packet( s );
 

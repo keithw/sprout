@@ -4,5 +4,6 @@ package Sprout;
 
 message DeliveryForecast {
   optional int64 greatest_message_received = 1;
-  repeated int32 cumulative_delivery_forecast = 2 [packed=true];
+  optional int64 time_of_issue = 2;
+  repeated int32 cumulative_delivery_forecast = 3 [packed=true];
 }

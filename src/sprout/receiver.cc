@@ -13,7 +13,7 @@ Receiver::Receiver()
     _count_this_tick( 0 )
 {
   for ( int i = 0; i < NUM_TICKS; i++ ) {
-    ProcessForecastInterval one_forecast( TICK_LENGTH,
+    ProcessForecastInterval one_forecast( .001 * TICK_LENGTH,
 					  _process,
 					  MAX_ARRIVALS_PER_TICK,
 					  i + 1 );
@@ -21,18 +21,18 @@ Receiver::Receiver()
   }
 }
 
-void Receiver::advance_to( const double time )
+void Receiver::advance_to( const uint64_t time )
 {
   assert( time >= _time );
 
   bool new_tick = false;
 
   while ( _time + TICK_LENGTH < time ) {
-    _process.evolve( TICK_LENGTH );
+    _process.evolve( .001 * TICK_LENGTH );
     fprintf( stderr, "Observing %d packets this tick\n", _count_this_tick );
-    _process.observe( TICK_LENGTH, _count_this_tick );
+    _process.observe( .001 * TICK_LENGTH, _count_this_tick );
     _count_this_tick = 0;
-    fprintf( stderr, "Ticking from %f to %f (target %f)\n",
+    fprintf( stderr, "Ticking from %ld to %ld (target %ld)\n",
 	     _time, _time + TICK_LENGTH, time );
     _time += TICK_LENGTH;
     new_tick = true;
@@ -40,7 +40,7 @@ void Receiver::advance_to( const double time )
 
   if ( new_tick ) {
     DeliveryForecast window_forecast( forecast() );
-    fprintf( stderr, "%f forecast: %d %d %d %d %d %d %d %d %d %d\n",
+    fprintf( stderr, "%ld forecast: %d %d %d %d %d %d %d %d %d %d\n",
 	     time,
 	     window_forecast.counts[ 0 ],
 	     window_forecast.counts[ 1 ],

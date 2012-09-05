@@ -53,8 +53,6 @@ namespace Network {
   uint16_t timestamp16( void );
   uint16_t timestamp_diff( uint16_t tsnew, uint16_t tsold );
 
-  double timestamp_secs( void );
-
   class NetworkException {
   public:
     string function;

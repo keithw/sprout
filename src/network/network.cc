@@ -305,11 +305,11 @@ void Connection::send( string s )
 
   /* debug Sprout */
   if ( !forecastr_initialized ) {
-    forecastr.warp_to( timestamp_secs() );
+    forecastr.warp_to( timestamp() );
     forecastr_initialized = true;
   }
 
-  forecastr.advance_to( timestamp_secs() );
+  forecastr.advance_to( timestamp() );
 
   Packet px = new_packet( s );
 
@@ -369,11 +369,11 @@ string Connection::recv( void )
 
   /* Update Sprout */
   if ( !forecastr_initialized ) {
-    forecastr.warp_to( timestamp_secs() );
+    forecastr.warp_to( timestamp() );
     forecastr_initialized = true;
   }
 
-  forecastr.advance_to( timestamp_secs() );
+  forecastr.advance_to( timestamp() );
   forecastr.recv();
 
   if ( p.seq >= expected_receiver_seq ) { /* don't use out-of-order packets for timestamp or targeting */
@@ -437,11 +437,6 @@ int Connection::port( void ) const
 uint64_t Network::timestamp( void )
 {
   return frozen_timestamp();
-}
-
-double Network::timestamp_secs( void )
-{
-  return (double) timestamp() / 1000.0;
 }
 
 uint16_t Network::timestamp16( void )

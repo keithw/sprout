@@ -40,20 +40,18 @@ void Receiver::advance_to( const double time )
 
   if ( new_tick ) {
     DeliveryForecast window_forecast( forecast() );
-    for ( int i = 0; i < 10; i++ ) {
-      fprintf( stderr, "%f forecast: %d %d %d %d %d %d %d %d %d %d\n",
-	       time,
-	       window_forecast.counts[ 0 ],
-	       window_forecast.counts[ 1 ],
-	       window_forecast.counts[ 2 ],
-	       window_forecast.counts[ 3 ],
-	       window_forecast.counts[ 4 ],
-	       window_forecast.counts[ 5 ],
-	       window_forecast.counts[ 6 ],
-	       window_forecast.counts[ 7 ],
-	       window_forecast.counts[ 8 ],
-	       window_forecast.counts[ 9 ] );
-    }
+    fprintf( stderr, "%f forecast: %d %d %d %d %d %d %d %d %d %d\n",
+	     time,
+	     window_forecast.counts[ 0 ],
+	     window_forecast.counts[ 1 ],
+	     window_forecast.counts[ 2 ],
+	     window_forecast.counts[ 3 ],
+	     window_forecast.counts[ 4 ],
+	     window_forecast.counts[ 5 ],
+	     window_forecast.counts[ 6 ],
+	     window_forecast.counts[ 7 ],
+	     window_forecast.counts[ 8 ],
+	     window_forecast.counts[ 9 ] );
   }
 }
 

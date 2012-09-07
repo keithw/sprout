@@ -27,7 +27,7 @@ ntester_LDADD = ../statesync/libmoshstatesync.a ../terminal/libmoshterminal.a ..
 
 benchmark_SOURCES = benchmark.cc
 benchmark_CPPFLAGS = -I$(srcdir)/../util -I$(srcdir)/../statesync -I$(srcdir)/../terminal -I../protobufs -I$(srcdir)/../frontend -I$(srcdir)/../crypto -I$(srcdir)/../network -I$(srcdir)/../sprout $(protobuf_CFLAGS)
-benchmark_LDADD = ../frontend/terminaloverlay.o ../statesync/libmoshstatesync.a ../terminal/libmoshterminal.a ../protobufs/libmoshprotos.a ../network/libmoshnetwork.a ../sprout/libsprout.a ../crypto/libmoshcrypto.a ../util/libmoshutil.a $(STDDJB_LDFLAGS) $(LIBUTIL) -lm $(TINFO_LIBS) $(protobuf_LIBS) $(OPENSSL_LIBS)
+benchmark_LDADD = ../frontend/terminaloverlay.o ../statesync/libmoshstatesync.a ../terminal/libmoshterminal.a ../network/libmoshnetwork.a ../sprout/libsprout.a ../crypto/libmoshcrypto.a ../util/libmoshutil.a ../protobufs/libmoshprotos.a $(STDDJB_LDFLAGS) $(LIBUTIL) -lm $(TINFO_LIBS) $(protobuf_LIBS) $(OPENSSL_LIBS)
 
 sproutbt_SOURCES = sproutbt.cc
 sproutbt_CPPFLAGS = -I$(srcdir)/../util -I$(srcdir)/../network -I$(srcdir)/../crypto -I$(srcdir)/../sprout -I../protobufs $(protobuf_CFLAGS)

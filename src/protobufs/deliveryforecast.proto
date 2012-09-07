@@ -3,7 +3,7 @@ option optimize_for = LITE_RUNTIME;
 package Sprout;
 
 message DeliveryForecast {
-  optional int64 greatest_message_received = 1;
-  optional int64 time_of_issue = 2;
-  repeated int32 cumulative_delivery_forecast = 3 [packed=true];
+  optional uint64 last_seq = 1;
+  optional uint64 time = 2;
+  repeated uint32 counts = 3 [packed=true];
 }

@@ -163,6 +163,8 @@ namespace Network {
     }
 
     void set_last_roundtrip_success( uint64_t s_success ) { last_roundtrip_success = s_success; }
+
+    Sprout::DeliveryForecast forecast( void ) { return forecastr.forecast(); }
   };
 }
 

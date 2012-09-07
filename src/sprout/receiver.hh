@@ -1,20 +1,12 @@
+#ifndef RECEIVER_HH
+#define RECEIVER_HH
+
 #include <stdint.h>
 
 #include "process.hh"
 #include "processforecaster.hh"
 
-#ifndef RECEIVER_HH
-#define RECEIVER_HH
-
-class DeliveryForecast
-{
-public:
-  const uint64_t TICK_LENGTH;
-  const std::vector< int > counts;
-
-  DeliveryForecast( const double s_TICK_LENGTH, const std::vector< int > s_counts )
-    : TICK_LENGTH( s_TICK_LENGTH ), counts( s_counts ) {}
-};
+#include "deliveryforecast.pb.h"
 
 class Receiver
 {
@@ -35,14 +27,18 @@ private:
 
   int _count_this_tick;
 
+  Sprout::DeliveryForecast _cached_forecast;
+
+  uint64_t _expected_seq;
+
 public:
 
   Receiver();
   void warp_to( const uint64_t time ) { _time = time; }
   void advance_to( const uint64_t time );
-  void recv( void );
+  void recv( const uint64_t seq );
 
-  DeliveryForecast forecast( void );
+  Sprout::DeliveryForecast forecast( void );
 };
 
 #endif

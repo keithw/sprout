@@ -35,6 +35,7 @@
 
 #include <stdint.h>
 #include <deque>
+#include <queue>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string>
@@ -47,7 +48,7 @@
 using namespace Crypto;
 
 namespace Network {
-  static const unsigned int MOSH_PROTOCOL_VERSION = 2; /* bumped for echo-ack */
+  static const unsigned int MOSH_PROTOCOL_VERSION = 3; /* bumped for throwaway */
 
   uint64_t timestamp( void );
   uint16_t timestamp16( void );
@@ -70,18 +71,31 @@ namespace Network {
   public:
     uint64_t seq;
     Direction direction;
-    uint16_t timestamp, timestamp_reply;
+    uint16_t timestamp, timestamp_reply, throwaway_window;
     string payload;
     
     Packet( uint64_t s_seq, Direction s_direction,
-	    uint16_t s_timestamp, uint16_t s_timestamp_reply, string s_payload )
+	    uint16_t s_timestamp, uint16_t s_timestamp_reply, uint16_t s_throwaway_window, string s_payload )
       : seq( s_seq ), direction( s_direction ),
-	timestamp( s_timestamp ), timestamp_reply( s_timestamp_reply ), payload( s_payload )
+	timestamp( s_timestamp ), timestamp_reply( s_timestamp_reply ), throwaway_window( s_throwaway_window ),
+	payload( s_payload )
     {}
     
     Packet( string coded_packet, Session *session );
     
     string tostring( Session *session );
+  };
+
+  class SendQueue {
+  private:
+    std::queue< std::pair< uint64_t, uint64_t > > sent_packets; /* seq, ts */
+
+    static const int REORDER_LIMIT = 10; /* ms */
+
+  public:
+    SendQueue() : sent_packets() {}
+
+    uint16_t add( const uint64_t seq ); /* returns throwaway */
   };
 
   class Connection {
@@ -93,8 +107,8 @@ namespace Network {
     static const int PORT_RANGE_LOW  = 60001;
     static const int PORT_RANGE_HIGH = 60999;
 
-    static const unsigned int SERVER_ASSOCIATION_TIMEOUT = 20000;
-    static const unsigned int PORT_HOP_INTERVAL          = 20000;
+    static const unsigned int SERVER_ASSOCIATION_TIMEOUT = 2000000;
+    static const unsigned int PORT_HOP_INTERVAL          = 2000000;
 
     static bool try_bind( int socket, uint32_t addr, int port );
 
@@ -137,6 +151,8 @@ namespace Network {
     /* Sprout state */
     Receiver forecastr;
     bool forecastr_initialized;
+
+    SendQueue send_queue;
 
   public:
     Connection( const char *desired_ip, const char *desired_port ); /* server */

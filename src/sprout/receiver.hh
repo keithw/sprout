@@ -2,6 +2,7 @@
 #define RECEIVER_HH
 
 #include <stdint.h>
+#include <queue>
 
 #include "process.hh"
 #include "processforecaster.hh"
@@ -19,6 +20,18 @@ private:
   static const int MAX_ARRIVALS_PER_TICK = 30;
   static const int NUM_TICKS = 10;
 
+  class RecvQueue {
+  private:
+    std::priority_queue< uint64_t, std::deque<uint64_t>, std::greater<uint64_t> > received_sequence_numbers;
+    uint64_t throwaway_before;
+
+  public:
+    RecvQueue() : received_sequence_numbers(), throwaway_before( 0 ) {}
+
+    void recv( const uint64_t seq, const uint16_t throwaway_window );
+    uint64_t packet_count( void );
+  };
+
   Process _process;
 
   std::vector< ProcessForecastInterval > _forecastr;
@@ -29,14 +42,14 @@ private:
 
   Sprout::DeliveryForecast _cached_forecast;
 
-  uint64_t _expected_seq;
+  RecvQueue _recv_queue;
 
 public:
 
   Receiver();
   void warp_to( const uint64_t time ) { _time = time; }
   void advance_to( const uint64_t time );
-  void recv( const uint64_t seq );
+  void recv( const uint64_t seq, const uint16_t throwaway_window );
 
   Sprout::DeliveryForecast forecast( void );
 };

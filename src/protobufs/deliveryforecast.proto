@@ -3,7 +3,8 @@ option optimize_for = LITE_RUNTIME;
 package Sprout;
 
 message DeliveryForecast {
-  optional uint64 last_seq = 1;
+  optional uint64 received_or_lost_count = 1;
   optional uint64 time = 2;
   repeated uint32 counts = 3 [packed=true];
+  optional uint64 throwaway = 4;
 }

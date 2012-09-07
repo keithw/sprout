@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <string>
 #include <assert.h>
+#include <list>
 
 #include "network.h"
 #include "select.h"
@@ -90,7 +91,7 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int interval = 2;
+  const int interval = 1;
 
   /* wait to get attached */
   if ( server ) {
@@ -114,7 +115,7 @@ int main( int argc, char *argv[] )
   uint64_t time_of_last_forecast = -1;
   uint64_t time_of_next_transmission = timestamp() + interval;
 
-  fprintf( stderr, "Looping...\n" );
+  fprintf( stderr, "Looping...\n" );  
 
   /* loop */
   while ( 1 ) {
@@ -144,9 +145,9 @@ int main( int argc, char *argv[] )
 	if ( forecast.time() != time_of_last_forecast ) {
 	  bp.add_forecast( forecast );
 	  time_of_last_forecast = forecast.time();
-	  fprintf( stderr, "Sending forecast, size = %lu (should be %lu)\n", bp.raw_forecast().size(), forecast.SerializeAsString().size() );
+	  //	  fprintf( stderr, "Sending forecast, size = %lu (should be %lu)\n", bp.raw_forecast().size(), forecast.SerializeAsString().size() );
 	} else {
-	  fprintf( stderr, "Sending...\n" );
+	  //	  fprintf( stderr, "Sending...\n" );
 	}
 
 	net->send( bp.tostring() );
@@ -162,7 +163,7 @@ int main( int argc, char *argv[] )
 	Sprout::DeliveryForecast forecast( packet.forecast() );
 
 	fprintf( stderr, "Forecast: packet=%ld t=%ld %d %d %d %d %d %d %d %d %d %d\n",
-		 forecast.last_seq(),
+		 forecast.received_or_lost_count(),
 		 forecast.time(),
 		 forecast.counts( 0 ),
 		 forecast.counts( 1 ),

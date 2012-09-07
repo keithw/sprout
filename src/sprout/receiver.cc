@@ -12,7 +12,7 @@ Receiver::Receiver()
     _time( -1 ),
     _count_this_tick( 0 ),
     _cached_forecast(),
-    _expected_seq( 0 )
+    _recv_queue()
 {
   for ( int i = 0; i < NUM_TICKS; i++ ) {
     ProcessForecastInterval one_forecast( .001 * TICK_LENGTH,
@@ -35,13 +35,10 @@ void Receiver::advance_to( const uint64_t time )
   }
 }
 
-void Receiver::recv( const uint64_t seq )
+void Receiver::recv( const uint64_t seq, const uint16_t throwaway_window )
 {
   _count_this_tick++;
-
-  if ( seq + 1 > _expected_seq ) {
-    _expected_seq = seq + 1;
-  }
+  _recv_queue.recv( seq, throwaway_window );
 }
 
 Sprout::DeliveryForecast Receiver::forecast( void )
@@ -53,7 +50,7 @@ Sprout::DeliveryForecast Receiver::forecast( void )
 
     _process.normalize();
 
-    _cached_forecast.set_last_seq( _expected_seq - 1 );
+    _cached_forecast.set_received_or_lost_count( _recv_queue.packet_count() );
     _cached_forecast.set_time( _time );
     _cached_forecast.clear_counts();
 
@@ -63,4 +60,24 @@ Sprout::DeliveryForecast Receiver::forecast( void )
 
     return _cached_forecast;
   }
+}
+
+void Receiver::RecvQueue::recv( const uint64_t seq, const uint16_t throwaway_window )
+{
+  received_sequence_numbers.push( seq );
+  throwaway_before = seq - throwaway_window;
+}
+
+uint64_t Receiver::RecvQueue::packet_count( void )
+{
+  /* returns cumulative count of packets received or lost */
+  while ( !received_sequence_numbers.empty() ) {
+    if ( received_sequence_numbers.top() < throwaway_before ) {
+      received_sequence_numbers.pop();
+    } else {
+      break;
+    }
+  }
+
+  return throwaway_before + received_sequence_numbers.size();
 }

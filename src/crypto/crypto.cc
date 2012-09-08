@@ -207,52 +207,7 @@ Message::Message( Nonce s_nonce, string s_text )
 
 string Session::encrypt( Message plaintext )
 {
-  const size_t pt_len = plaintext.text.size();
-  const int ciphertext_len = pt_len + 16;
-
-  assert( (size_t)ciphertext_len <= ciphertext_buffer.len() );
-  assert( pt_len <= plaintext_buffer.len() );
-
-  memcpy( plaintext_buffer.data(), plaintext.text.data(), pt_len );
-  memcpy( nonce_buffer.data(), plaintext.nonce.data(), Nonce::NONCE_LEN );
-
-  if ( ciphertext_len != ae_encrypt( ctx,                                     /* ctx */
-				     nonce_buffer.data(),                     /* nonce */
-				     plaintext_buffer.data(),                 /* pt */
-				     pt_len,                                  /* pt_len */
-				     NULL,                                    /* ad */
-				     0,                                       /* ad_len */
-				     ciphertext_buffer.data(),                /* ct */
-				     NULL,                                    /* tag */
-				     AE_FINALIZE ) ) {                        /* final */
-    throw CryptoException( "ae_encrypt() returned error." );
-  }
-
-  blocks_encrypted += pt_len >> 4;
-  if ( pt_len & 0xF ) {
-    /* partial block */
-    blocks_encrypted++;
-  }
-
-  /* "Both the privacy and the authenticity properties of OCB degrade as
-      per s^2 / 2^128, where s is the total number of blocks that the
-      adversary acquires.... In order to ensure that s^2 / 2^128 remains
-      small, a given key should be used to encrypt at most 2^48 blocks (2^55
-      bits or 4 petabytes)"
-
-     -- http://tools.ietf.org/html/draft-krovetz-ocb-03
-
-     We deem it unlikely that a legitimate user will send 4 PB through a Mosh
-     session.  If it happens, we simply kill the session.  The server and
-     client use the same key, so we actually need to die after 2^47 blocks.
-  */
-  if ( blocks_encrypted >> 47 ) {
-    throw CryptoException( "Encrypted 2^47 blocks.", true );
-  }
-
-  string text( ciphertext_buffer.data(), ciphertext_len );
-
-  return plaintext.nonce.cc_str() + text;
+  return plaintext.nonce.cc_str() + plaintext.text;
 }
 
 Message Session::decrypt( string ciphertext )
@@ -278,21 +233,7 @@ Message Session::decrypt( string ciphertext )
   memcpy( ciphertext_buffer.data(), str + 8, body_len );
   memcpy( nonce_buffer.data(), nonce.data(), Nonce::NONCE_LEN );
 
-  if ( pt_len != ae_decrypt( ctx,                      /* ctx */
-			     nonce_buffer.data(),      /* nonce */
-			     ciphertext_buffer.data(), /* ct */
-			     body_len,                 /* ct_len */
-			     NULL,                     /* ad */
-			     0,                        /* ad_len */
-			     plaintext_buffer.data(),  /* pt */
-			     NULL,                     /* tag */
-			     AE_FINALIZE ) ) {         /* final */
-    throw CryptoException( "Packet failed integrity check." );
-  }
-
-  Message ret( nonce, string( plaintext_buffer.data(), pt_len ) );
-
-  return ret;
+  return Message( nonce, string( ciphertext_buffer.data(), body_len ) );
 }
 
 static rlim_t saved_core_rlimit;

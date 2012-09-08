@@ -310,14 +310,6 @@ void Connection::send( string s )
     return;
   }
 
-  /* debug Sprout */
-  if ( !forecastr_initialized ) {
-    forecastr.warp_to( timestamp() );
-    forecastr_initialized = true;
-  }
-
-  forecastr.advance_to( timestamp() );
-
   Packet px = new_packet( s );
 
   string p = px.tostring( &session );

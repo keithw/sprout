@@ -15,7 +15,7 @@ private:
 
   double from_bin_floor( unsigned int bin ) const { if ( bin <= 0 ) { return -INT_MAX; } else { return bin * _bin_width + _offset; } }
   double from_bin_ceil( unsigned int bin ) const { if ( bin >= _function.size() - 1 ) { return INT_MAX; } else { return (bin + 1) * _bin_width + _offset; } }
-  double from_bin_mid( unsigned int bin ) const { return (bin + 0.5) * _bin_width + _offset; }
+  double from_bin_mid( unsigned int bin ) const { if ( bin == 0 ) { return 0; } return (bin + 0.5) * _bin_width + _offset; }
 
 public:
   SampledFunction( const int num_samples, const double maximum_value, const double minimum_value );

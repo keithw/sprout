@@ -91,7 +91,7 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int fallback_interval = 100;
+  const int fallback_interval = 10;
   const int TARGET_DELAY_TICKS = 5;
 
   /* wait to get attached */

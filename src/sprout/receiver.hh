@@ -52,6 +52,8 @@ public:
   void recv( const uint64_t seq, const uint16_t throwaway_window );
 
   Sprout::DeliveryForecast forecast( void );
+
+  int get_tick_length( void ) const { return TICK_LENGTH; }
 };
 
 #endif

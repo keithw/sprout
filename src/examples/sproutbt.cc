@@ -145,9 +145,6 @@ int main( int argc, char *argv[] )
 	if ( forecast.time() != time_of_last_forecast ) {
 	  bp.add_forecast( forecast );
 	  time_of_last_forecast = forecast.time();
-	  //	  fprintf( stderr, "Sending forecast, size = %lu (should be %lu)\n", bp.raw_forecast().size(), forecast.SerializeAsString().size() );
-	} else {
-	  //	  fprintf( stderr, "Sending...\n" );
 	}
 
 	net->send( bp.tostring() );
@@ -162,19 +159,22 @@ int main( int argc, char *argv[] )
       if ( packet.has_forecast() ) {
 	Sprout::DeliveryForecast forecast( packet.forecast() );
 
-	fprintf( stderr, "Forecast: packet=%ld t=%ld %d %d %d %d %d %d %d %d %d %d\n",
-		 forecast.received_or_lost_count(),
-		 forecast.time(),
-		 forecast.counts( 0 ),
-		 forecast.counts( 1 ),
-		 forecast.counts( 2 ),
-		 forecast.counts( 3 ),
-		 forecast.counts( 4 ),
-		 forecast.counts( 5 ),
-		 forecast.counts( 6 ),
-		 forecast.counts( 7 ),
-		 forecast.counts( 8 ),
-		 forecast.counts( 9 ) );
+	uint64_t delayed_queue_estimate = net->get_next_seq() - forecast.received_or_lost_count();
+
+	int tick_estimate = (net->get_SRTT() / 2.0) / net->get_tick_length();
+
+	if ( tick_estimate < 0 ) {
+	  tick_estimate = 0;
+	} else if ( tick_estimate >= forecast.counts_size() ) {
+	  tick_estimate = forecast.counts_size() - 1;
+	}
+
+	int current_queue_estimate = delayed_queue_estimate - forecast.counts( tick_estimate );
+	if ( current_queue_estimate < 0 ) {
+	  current_queue_estimate = 0;
+	}
+
+	fprintf( stderr, "Packets in queue (est.): %d\n", current_queue_estimate );
       }
     }
   }

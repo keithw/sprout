@@ -181,6 +181,9 @@ namespace Network {
     void set_last_roundtrip_success( uint64_t s_success ) { last_roundtrip_success = s_success; }
 
     Sprout::DeliveryForecast forecast( void ) { return forecastr.forecast(); }
+
+    uint64_t get_next_seq( void ) const { return next_seq; }
+    int get_tick_length( void ) const { return forecastr.get_tick_length(); }
   };
 }
 

@@ -91,7 +91,7 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int fallback_interval = 10;
+  const int fallback_interval = 50;
   const int TARGET_DELAY_TICKS = 5;
 
   /* wait to get attached */
@@ -116,27 +116,46 @@ int main( int argc, char *argv[] )
   uint64_t time_of_last_forecast = -1;
   uint64_t time_of_next_transmission = timestamp() + fallback_interval;
 
-  int packets_to_send = 0;
-
   fprintf( stderr, "Looping...\n" );  
+
+  Sprout::DeliveryForecast operative_forecast = net->forecast(); /* initial but valid forecast */
+  uint64_t forecast_timestamp = 0;
 
   /* loop */
   while ( 1 ) {
-    int wait_time = time_of_next_transmission - timestamp();
-    if ( wait_time < 0 ) {
-      wait_time = 0;
+    /* possibly send packets */
+    uint64_t delayed_queue_estimate = net->get_next_seq() - operative_forecast.received_or_lost_count();
+    int current_forecast_tick = (timestamp() - forecast_timestamp) / net->get_tick_length();
+
+    if ( current_forecast_tick < 0 ) {
+      current_forecast_tick = 0;
+    } else if ( current_forecast_tick >= operative_forecast.counts_size() ) {
+      current_forecast_tick = operative_forecast.counts_size() - 1;
     }
 
-    int active_fds = sel.select( wait_time );
-    if ( active_fds < 0 ) {
-      perror( "select" );
-      exit( 1 );
+    int current_queue_estimate = delayed_queue_estimate - operative_forecast.counts( current_forecast_tick );
+    if ( current_queue_estimate < 0 ) {
+      current_queue_estimate = 0;
     }
 
-    uint64_t now = timestamp();
+    int cumulative_delivery_tick = current_forecast_tick + TARGET_DELAY_TICKS;
+    if ( cumulative_delivery_tick >= operative_forecast.counts_size() ) {
+      cumulative_delivery_tick = operative_forecast.counts_size() - 1;
+    }
 
-    /* send */
-    if ( ( packets_to_send > 0 ) || ( time_of_next_transmission <= now ) ) {
+    int cumulative_delivery_forecast = operative_forecast.counts( cumulative_delivery_tick );
+
+    int packets_to_send = cumulative_delivery_forecast - current_queue_estimate;
+
+    if ( packets_to_send < 0 ) {
+      packets_to_send = 0;
+    }
+
+    fprintf( stderr, "current tick = %d, cum delivery tick = %d, packets to send = %d\n",
+	     current_forecast_tick, cumulative_delivery_tick, packets_to_send );
+
+    /* actually send, maybe */
+    if ( ( packets_to_send > 0 ) || ( time_of_next_transmission <= timestamp() ) ) {
       Sprout::DeliveryForecast forecast = net->forecast();
 
       do {
@@ -151,68 +170,46 @@ int main( int argc, char *argv[] )
 	}
 
 	net->send( bp.tostring() );
+	fprintf( stderr, "=" );
 	if ( packets_to_send > 0 ) { packets_to_send--; }
       } while ( packets_to_send > 0 );
 
       time_of_next_transmission += fallback_interval;
     }
 
+    /* wait */
+    int wait_time = time_of_next_transmission - timestamp();
+    if ( (wait_time < 0) || (packets_to_send > 0) ) {
+      wait_time = 0;
+    }
+
+    int active_fds = sel.select( wait_time );
+    if ( active_fds < 0 ) {
+      perror( "select" );
+      exit( 1 );
+    }
+
     /* receive */
     if ( sel.read( net->fd() ) ) {
       BulkPacket packet( net->recv() );
-
+      
       fprintf( stderr, "." );
-
+      
       if ( packet.has_forecast() ) {
-	Sprout::DeliveryForecast forecast( packet.forecast() );
-
-	uint64_t delayed_queue_estimate = net->get_next_seq() - forecast.received_or_lost_count();
-
-	int tick_estimate = (net->get_SRTT() / 2.0) / net->get_tick_length();
-
-	if ( tick_estimate < 0 ) {
-	  tick_estimate = 0;
-	} else if ( tick_estimate >= forecast.counts_size() ) {
-	  tick_estimate = forecast.counts_size() - 1;
-	}
-
-	int current_queue_estimate = delayed_queue_estimate - forecast.counts( tick_estimate );
-	if ( current_queue_estimate < 0 ) {
-	  current_queue_estimate = 0;
-	}
-
-	fprintf( stderr, "Packets in queue (est.): %d\n", current_queue_estimate );
-
-	int cumulative_delivery_tick = tick_estimate + TARGET_DELAY_TICKS;
-	if ( cumulative_delivery_tick >= forecast.counts_size() ) {
-	  cumulative_delivery_tick = forecast.counts_size() - 1;
-	}
-
-	int cumulative_delivery_forecast = forecast.counts( cumulative_delivery_tick );
-
-	packets_to_send = cumulative_delivery_forecast - current_queue_estimate;
-
-	fprintf( stderr, "cumulative delivery tick: %d\n",
-		 cumulative_delivery_tick );
+	operative_forecast = packet.forecast();
+	forecast_timestamp = timestamp() - (net->get_SRTT() / 2.0);
 
 	fprintf( stderr, "%d %d %d %d %d %d %d %d %d %d\n",
-		 forecast.counts( 0 ),
-		 forecast.counts( 1 ),
-		 forecast.counts( 2 ),
-		 forecast.counts( 3 ),
-		 forecast.counts( 4 ),
-		 forecast.counts( 5 ),
-		 forecast.counts( 6 ),
-		 forecast.counts( 7 ),
-		 forecast.counts( 8 ),
-		 forecast.counts( 9 ) );		 
-
-	fprintf( stderr, "Cumulative delivery forecast: %d, current_queue_estimate = %d\n",
-		 cumulative_delivery_forecast, current_queue_estimate );
-
-	if ( packets_to_send < 0 ) {
-	  packets_to_send = 0;
-	}
+		 operative_forecast.counts( 0 ),
+		 operative_forecast.counts( 1 ),
+		 operative_forecast.counts( 2 ),
+		 operative_forecast.counts( 3 ),
+		 operative_forecast.counts( 4 ),
+		 operative_forecast.counts( 5 ),
+		 operative_forecast.counts( 6 ),
+		 operative_forecast.counts( 7 ),
+		 operative_forecast.counts( 8 ),
+		 operative_forecast.counts( 9 ) );
       }
     }
   }

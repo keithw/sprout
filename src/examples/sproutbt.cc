@@ -91,7 +91,8 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int interval = 1;
+  const int fallback_interval = 100;
+  const int TARGET_DELAY_TICKS = 5;
 
   /* wait to get attached */
   if ( server ) {
@@ -113,7 +114,9 @@ int main( int argc, char *argv[] )
   }
 
   uint64_t time_of_last_forecast = -1;
-  uint64_t time_of_next_transmission = timestamp() + interval;
+  uint64_t time_of_next_transmission = timestamp() + fallback_interval;
+
+  int packets_to_send = 0;
 
   fprintf( stderr, "Looping...\n" );  
 
@@ -133,7 +136,7 @@ int main( int argc, char *argv[] )
     uint64_t now = timestamp();
 
     /* send */
-    if ( time_of_next_transmission <= now ) {
+    if ( ( packets_to_send > 0 ) || ( time_of_next_transmission <= now ) ) {
       Sprout::DeliveryForecast forecast = net->forecast();
 
       do {
@@ -148,13 +151,17 @@ int main( int argc, char *argv[] )
 	}
 
 	net->send( bp.tostring() );
-	time_of_next_transmission += interval;
-      } while ( time_of_next_transmission <= now );
+	if ( packets_to_send > 0 ) { packets_to_send--; }
+      } while ( packets_to_send > 0 );
+
+      time_of_next_transmission += fallback_interval;
     }
 
     /* receive */
     if ( sel.read( net->fd() ) ) {
       BulkPacket packet( net->recv() );
+
+      fprintf( stderr, "." );
 
       if ( packet.has_forecast() ) {
 	Sprout::DeliveryForecast forecast( packet.forecast() );
@@ -175,6 +182,37 @@ int main( int argc, char *argv[] )
 	}
 
 	fprintf( stderr, "Packets in queue (est.): %d\n", current_queue_estimate );
+
+	int cumulative_delivery_tick = tick_estimate + TARGET_DELAY_TICKS;
+	if ( cumulative_delivery_tick >= forecast.counts_size() ) {
+	  cumulative_delivery_tick = forecast.counts_size() - 1;
+	}
+
+	int cumulative_delivery_forecast = forecast.counts( cumulative_delivery_tick );
+
+	packets_to_send = cumulative_delivery_forecast - current_queue_estimate;
+
+	fprintf( stderr, "cumulative delivery tick: %d\n",
+		 cumulative_delivery_tick );
+
+	fprintf( stderr, "%d %d %d %d %d %d %d %d %d %d\n",
+		 forecast.counts( 0 ),
+		 forecast.counts( 1 ),
+		 forecast.counts( 2 ),
+		 forecast.counts( 3 ),
+		 forecast.counts( 4 ),
+		 forecast.counts( 5 ),
+		 forecast.counts( 6 ),
+		 forecast.counts( 7 ),
+		 forecast.counts( 8 ),
+		 forecast.counts( 9 ) );		 
+
+	fprintf( stderr, "Cumulative delivery forecast: %d, current_queue_estimate = %d\n",
+		 cumulative_delivery_forecast, current_queue_estimate );
+
+	if ( packets_to_send < 0 ) {
+	  packets_to_send = 0;
+	}
       }
     }
   }

@@ -123,7 +123,10 @@ double ProcessForecastInterval::probability( const Process & ensemble, unsigned 
 
   double ret = ensemble.pmf().summation( _count_probability, count );
 
-  assert( ret <= 1.0 );
+  if ( ret > 1.0 ) {
+    fprintf( stderr, "Error, prob = %f\n", ret );
+    ret = 1.0;
+  }
 
   return ret;
 }

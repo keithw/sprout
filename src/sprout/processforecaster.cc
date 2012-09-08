@@ -121,12 +121,7 @@ double ProcessForecastInterval::probability( const Process & ensemble, unsigned 
 
   assert( count < _count_probability[ 0 ].size() );
 
-  double ret = 0.0;
-
-  ensemble.pmf().for_each( [&] ( const double, const double & value, unsigned int index )
-			   {
-			     ret += value * _count_probability[ index ][ count ];
-			   } );
+  double ret = ensemble.pmf().summation( _count_probability, count );
 
   assert( ret <= 1.0 );
 

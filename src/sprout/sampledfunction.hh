@@ -42,6 +42,9 @@ public:
   const SampledFunction & operator=( const SampledFunction & other );
 
   double lower_quantile( const double x ) const;
+
+  double summation( const std::vector< std::vector< double > > & count_probability,
+		    const int count ) const;
 };
 
 #endif

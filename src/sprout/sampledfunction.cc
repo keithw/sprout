@@ -64,3 +64,12 @@ double SampledFunction::lower_quantile( const double x ) const
   return from_bin_floor( _function.size() - 1 );
 }
 
+double SampledFunction::summation( const std::vector< std::vector< double > > & count_probability,
+				   const int count ) const
+{
+  double ret = 0.0;
+  for ( unsigned int i = 0; i < _function.size(); i++ ) {
+    ret += _function[ i ] * count_probability[ i ][ count ];
+  }
+  return ret;
+}

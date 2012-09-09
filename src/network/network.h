@@ -71,13 +71,13 @@ namespace Network {
   public:
     uint64_t seq;
     Direction direction;
-    uint16_t timestamp, timestamp_reply, throwaway_window;
+    uint16_t timestamp, timestamp_reply, throwaway_window, time_to_next;
     string payload;
     
     Packet( uint64_t s_seq, Direction s_direction,
-	    uint16_t s_timestamp, uint16_t s_timestamp_reply, uint16_t s_throwaway_window, string s_payload )
+	    uint16_t s_timestamp, uint16_t s_timestamp_reply, uint16_t s_throwaway_window, uint16_t s_time_to_next, string s_payload )
       : seq( s_seq ), direction( s_direction ),
-	timestamp( s_timestamp ), timestamp_reply( s_timestamp_reply ), throwaway_window( s_throwaway_window ),
+      timestamp( s_timestamp ), timestamp_reply( s_timestamp_reply ), throwaway_window( s_throwaway_window ), time_to_next( s_time_to_next ),
 	payload( s_payload )
     {}
     
@@ -144,7 +144,7 @@ namespace Network {
     bool have_send_exception;
     NetworkException send_exception;
 
-    Packet new_packet( string &s_payload );
+    Packet new_packet( string &s_payload, uint16_t time_to_next );
 
     void hop_port( void );
 
@@ -159,7 +159,7 @@ namespace Network {
     Connection( const char *key_str, const char *ip, int port ); /* client */
     ~Connection();
 
-    void send( string s );
+    void send( string s, uint16_t time_to_next = 0 );
     string recv( void );
     int fd( void ) const { return sock; }
     int get_MTU( void ) const { return MTU; }

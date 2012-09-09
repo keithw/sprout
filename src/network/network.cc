@@ -61,6 +61,7 @@ Packet::Packet( string coded_packet, Session *session )
     timestamp( -1 ),
     timestamp_reply( -1 ),
     throwaway_window( -1 ),
+    time_to_next( -1 ),
     payload()
 {
   Message message = session->decrypt( coded_packet );
@@ -74,8 +75,9 @@ Packet::Packet( string coded_packet, Session *session )
   timestamp = be16toh( data[ 0 ] );
   timestamp_reply = be16toh( data[ 1 ] );
   throwaway_window = be16toh( data[ 2 ] );
+  time_to_next = be16toh( data[ 3 ] );
 
-  payload = string( message.text.begin() + 3 * sizeof( uint16_t ), message.text.end() );
+  payload = string( message.text.begin() + 4 * sizeof( uint16_t ), message.text.end() );
 }
 
 /* Output coded string from packet */
@@ -83,16 +85,17 @@ string Packet::tostring( Session *session )
 {
   uint64_t direction_seq = (uint64_t( direction == TO_CLIENT ) << 63) | (seq & SEQUENCE_MASK);
 
-  uint16_t ts_net[ 3 ] = { static_cast<uint16_t>( htobe16( timestamp ) ),
+  uint16_t ts_net[ 4 ] = { static_cast<uint16_t>( htobe16( timestamp ) ),
                            static_cast<uint16_t>( htobe16( timestamp_reply ) ),
-			   static_cast<uint16_t>( htobe16( throwaway_window ) ) };
+			   static_cast<uint16_t>( htobe16( throwaway_window ) ),
+			   static_cast<uint16_t>( htobe16( time_to_next ) ) };
 
-  string timestamps = string( (char *)ts_net, 3 * sizeof( uint16_t ) );
+  string timestamps = string( (char *)ts_net, 4 * sizeof( uint16_t ) );
 
   return session->encrypt( Message( Nonce( direction_seq ), timestamps + payload ) );
 }
 
-Packet Connection::new_packet( string &s_payload )
+Packet Connection::new_packet( string &s_payload, uint16_t time_to_next )
 {
   uint16_t outgoing_timestamp_reply = -1;
 
@@ -107,7 +110,7 @@ Packet Connection::new_packet( string &s_payload )
 
   uint16_t throwaway_window = send_queue.add( next_seq + 1 );
 
-  Packet p( next_seq++, direction, timestamp16(), outgoing_timestamp_reply, throwaway_window, s_payload );
+  Packet p( next_seq++, direction, timestamp16(), outgoing_timestamp_reply, throwaway_window, time_to_next, s_payload );
 
   return p;
 }
@@ -304,13 +307,13 @@ Connection::Connection( const char *key_str, const char *ip, int port ) /* clien
   has_remote_addr = true;
 }
 
-void Connection::send( string s )
+void Connection::send( string s, uint16_t time_to_next )
 {
   if ( !has_remote_addr ) {
     return;
   }
 
-  Packet px = new_packet( s );
+  Packet px = new_packet( s, time_to_next );
 
   string p = px.tostring( &session );
 
@@ -373,7 +376,7 @@ string Connection::recv( void )
   }
 
   forecastr.advance_to( timestamp() );
-  forecastr.recv( p.seq, p.throwaway_window );
+  forecastr.recv( p.seq, p.throwaway_window, p.time_to_next );
 
   if ( p.seq >= expected_receiver_seq ) { /* don't use out-of-order packets for timestamp or targeting */
     expected_receiver_seq = p.seq + 1; /* this is security-sensitive because a replay attack could otherwise

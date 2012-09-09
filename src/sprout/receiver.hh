@@ -36,7 +36,7 @@ private:
 
   std::vector< ProcessForecastInterval > _forecastr;
 
-  uint64_t _time;
+  uint64_t _time, _score_time;
 
   int _count_this_tick;
 
@@ -47,9 +47,9 @@ private:
 public:
 
   Receiver();
-  void warp_to( const uint64_t time ) { _time = time; }
+  void warp_to( const uint64_t time ) { _score_time = _time = time; }
   void advance_to( const uint64_t time );
-  void recv( const uint64_t seq, const uint16_t throwaway_window );
+  void recv( const uint64_t seq, const uint16_t throwaway_window, const uint16_t time_to_next );
 
   Sprout::DeliveryForecast forecast( void );
 

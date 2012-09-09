@@ -45,14 +45,16 @@
 #endif
 
 static uint64_t millis_cache = -1;
+static uint64_t millis_offset = -1;
 
 uint64_t frozen_timestamp( void )
 {
   if ( millis_cache == uint64_t( -1 ) ) {
     freeze_timestamp();
+    millis_offset = millis_cache - 1000;
   }
 
-  return millis_cache;
+  return millis_cache - millis_offset;
 }
 
 void freeze_timestamp( void )

@@ -10,6 +10,7 @@ Receiver::Receiver()
 	      NUM_BINS ),
     _forecastr(),
     _time( -1 ),
+    _score_time( -1 ),
     _count_this_tick( 0 ),
     _cached_forecast(),
     _recv_queue()
@@ -29,16 +30,19 @@ void Receiver::advance_to( const uint64_t time )
 
   while ( _time + TICK_LENGTH < time ) {
     _process.evolve( .001 * TICK_LENGTH );
-    _process.observe( .001 * TICK_LENGTH, _count_this_tick );
-    _count_this_tick = 0;
+    if ( (_time >= _score_time) || (_count_this_tick > 0) ) {
+      _process.observe( .001 * TICK_LENGTH, _count_this_tick );
+      _count_this_tick = 0;
+    }
     _time += TICK_LENGTH;
   }
 }
 
-void Receiver::recv( const uint64_t seq, const uint16_t throwaway_window )
+void Receiver::recv( const uint64_t seq, const uint16_t throwaway_window, const uint16_t time_to_next )
 {
   _count_this_tick++;
   _recv_queue.recv( seq, throwaway_window );
+  _score_time = std::max( _time + time_to_next, _score_time );
 }
 
 Sprout::DeliveryForecast Receiver::forecast( void )

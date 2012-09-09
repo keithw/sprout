@@ -151,8 +151,10 @@ int main( int argc, char *argv[] )
       packets_to_send = 0;
     }
 
+    /*
     fprintf( stderr, "current tick = %d, cum delivery tick = %d, packets to send = %d\n",
 	     current_forecast_tick, cumulative_delivery_tick, packets_to_send );
+    */
 
     /* actually send, maybe */
     if ( ( packets_to_send > 0 ) || ( time_of_next_transmission <= timestamp() ) ) {
@@ -167,10 +169,20 @@ int main( int argc, char *argv[] )
 	if ( forecast.time() != time_of_last_forecast ) {
 	  bp.add_forecast( forecast );
 	  time_of_last_forecast = forecast.time();
+	  
+	  fprintf( stderr, "Sent counts:" );
+	  for ( int i = 0; i < forecast.counts_size(); i++ ) {
+	    fprintf( stderr, " %d", forecast.counts( i ) );
+	  }
+	  fprintf( stderr, "\n" );
 	}
 
-	net->send( bp.tostring() );
-	fprintf( stderr, "=" );
+	uint16_t time_to_next = 0;
+	if ( packets_to_send == 1 ) {
+	  time_to_next = time_of_next_transmission - timestamp();
+	}
+
+	net->send( bp.tostring(), time_to_next );
 	if ( packets_to_send > 0 ) { packets_to_send--; }
       } while ( packets_to_send > 0 );
 
@@ -193,23 +205,17 @@ int main( int argc, char *argv[] )
     if ( sel.read( net->fd() ) ) {
       BulkPacket packet( net->recv() );
       
-      fprintf( stderr, "." );
-      
       if ( packet.has_forecast() ) {
 	operative_forecast = packet.forecast();
+	assert( operative_forecast.counts_size() == 10 );
+
 	forecast_timestamp = timestamp() - (net->get_SRTT() / 2.0);
 
-	fprintf( stderr, "%d %d %d %d %d %d %d %d %d %d\n",
-		 operative_forecast.counts( 0 ),
-		 operative_forecast.counts( 1 ),
-		 operative_forecast.counts( 2 ),
-		 operative_forecast.counts( 3 ),
-		 operative_forecast.counts( 4 ),
-		 operative_forecast.counts( 5 ),
-		 operative_forecast.counts( 6 ),
-		 operative_forecast.counts( 7 ),
-		 operative_forecast.counts( 8 ),
-		 operative_forecast.counts( 9 ) );
+	fprintf( stderr, "Received counts:" );
+	for ( int i = 0; i < operative_forecast.counts_size(); i++ ) {
+	  fprintf( stderr, " %d", operative_forecast.counts( i ) );
+	}
+	fprintf( stderr, "\n" );
       }
     }
   }

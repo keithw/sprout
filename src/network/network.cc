@@ -376,6 +376,20 @@ string Connection::recv_raw( void )
     throw NetworkException( buffer, errno );
   }
 
+  /* auto-adjust to remote host */
+  has_remote_addr = true;
+  last_heard = timestamp();
+
+  if ( server ) { /* only client can roam */
+    if ( (remote_addr.sin_addr.s_addr != packet_remote_addr.sin_addr.s_addr)
+	 || (remote_addr.sin_port != packet_remote_addr.sin_port) ) {
+      remote_addr = packet_remote_addr;
+      fprintf( stderr, "Server now attached to client at %s:%d\n",
+	       inet_ntoa( remote_addr.sin_addr ),
+	       ntohs( remote_addr.sin_port ) );
+    }
+  }
+
   return string( buf, received_len );
 }
 

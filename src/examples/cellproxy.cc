@@ -136,7 +136,7 @@ void DelayQueue::tick( void )
   }
 
   while ( (!_pdp.empty())
-	  && (_schedule.empty())
+	  && (!_schedule.empty())
 	  && (_schedule.front() <= now) ) {
     const string packet = _pdp.front();
     _delivered.push_back( packet );
@@ -183,11 +183,13 @@ int main( int argc, char *argv[] )
     }
 
     if ( sel.read( server.fd() ) ) {
-      uplink.write( server.recv_raw() );
+      string p( server.recv_raw() );
+      uplink.write( p );
     }
 
     if ( sel.read( client.fd() ) ) {
-      downlink.write( client.recv_raw() );
+      string p( client.recv_raw() );
+      downlink.write( p );
     }
 
     std::vector< string > uplink_packets( uplink.read() );

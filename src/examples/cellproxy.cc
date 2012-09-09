@@ -16,15 +16,18 @@ private:
   class DelayedPacket
   {
   public:
+    uint64_t entry_time;
     uint64_t release_time;
     string contents;
 
-    DelayedPacket( uint64_t s_r, const string & s_c )
-      : release_time( s_r ), contents( s_c ) {}
+    DelayedPacket( uint64_t s_e, uint64_t s_r, const string & s_c )
+      : entry_time( s_e ), release_time( s_r ), contents( s_c ) {}
   };
 
+  const string _name;
+
   std::queue< DelayedPacket > _delay;
-  std::queue< string > _pdp;
+  std::queue< DelayedPacket > _pdp;
 
   std::queue< uint64_t > _schedule;
 
@@ -40,15 +43,16 @@ private:
   void tick( void );
 
 public:
-  DelayQueue( const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp );
+  DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp );
 
   int wait_time( void );
   std::vector< string > read( void );
   void write( const string & packet );
 };
 
-DelayQueue::DelayQueue( const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp )
-  : _delay(),
+DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp )
+  : _name( s_name ),
+    _delay(),
     _pdp(),
     _schedule(),
     _delivered(),
@@ -124,7 +128,8 @@ std::vector< string > DelayQueue::read( void )
 
 void DelayQueue::write( const string & packet )
 {
-  DelayedPacket p( timestamp() + _ms_delay, packet );
+  uint64_t now( timestamp() );
+  DelayedPacket p( now, now + _ms_delay, packet );
   _delay.push( p );
 }
 
@@ -136,23 +141,27 @@ void DelayQueue::tick( void )
 
   while ( (!_delay.empty())
 	  && (_delay.front().release_time <= now) ) {
-    const string packet = _delay.front().contents;
-    _pdp.push( packet );
+    _pdp.push( _delay.front() );
     _delay.pop();
   }
 
   while ( (!_pdp.empty())
 	  && (!_schedule.empty())
 	  && (_schedule.front() <= now) ) {
-    const string packet = _pdp.front();
-    _delivered.push_back( packet );
+    DelayedPacket packet = _pdp.front();
+    _delivered.push_back( packet.contents );
     _pdp.pop();
     _schedule.pop();
     _total_occurrences++;
     _used_occurrences++;
+    fprintf( stderr, "%s %d delivery %d\n", _name.c_str(), (int)timestamp(), int(timestamp() - packet.entry_time) );
   }
 
-  fprintf( stderr, "Utilization: %.1f%%\n", 100.0 * double(_used_occurrences) / double(_total_occurrences) );
+  fprintf( stderr, "%s Utilization: %.1f%%, Occupancy: %lu, In-flight: %lu\n",
+	   _name.c_str(),
+	   100.0 * double(_used_occurrences) / double(_total_occurrences),
+	   _pdp.size(),
+	   _delay.size() );
 }
 
 int main( int argc, char *argv[] )
@@ -177,8 +186,8 @@ int main( int argc, char *argv[] )
 
   /* Read in schedule */
   uint64_t now = timestamp();
-  DelayQueue uplink( 20, up_filename, now );
-  DelayQueue downlink( 20, down_filename, now );
+  DelayQueue uplink( "uplink", 20, up_filename, now );
+  DelayQueue downlink( "downlink", 20, down_filename, now );
 
   Select &sel = Select::get_instance();
   sel.add_fd( server.fd() );

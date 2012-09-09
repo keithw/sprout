@@ -91,7 +91,7 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int fallback_interval = 50;
+  const int fallback_interval = 100;
   const int TARGET_DELAY_TICKS = 5;
 
   /* wait to get attached */
@@ -147,6 +147,12 @@ int main( int argc, char *argv[] )
 
     int packets_to_send = cumulative_delivery_forecast - current_queue_estimate;
 
+    /*
+    fprintf( stderr, "Current tick=%d (%d packets), target tick=%d (%d packets)\n",
+	     current_forecast_tick, operative_forecast.counts( current_forecast_tick ),
+	     cumulative_delivery_tick, cumulative_delivery_forecast );
+    */
+
     if ( packets_to_send < 0 ) {
       packets_to_send = 0;
     }
@@ -179,7 +185,7 @@ int main( int argc, char *argv[] )
 
 	uint16_t time_to_next = 0;
 	if ( packets_to_send == 1 ) {
-	  time_to_next = time_of_next_transmission - timestamp();
+	  time_to_next = 500;
 	}
 
 	net->send( bp.tostring(), time_to_next );

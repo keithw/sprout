@@ -307,6 +307,17 @@ Connection::Connection( const char *key_str, const char *ip, int port ) /* clien
   has_remote_addr = true;
 }
 
+void Connection::send_raw( string s )
+{
+  if ( !has_remote_addr ) {
+    return;
+  }
+
+  sendto( sock, s.data(), s.size(), 0,
+	  (sockaddr *)&remote_addr, sizeof( remote_addr ) );
+
+}
+
 void Connection::send( string s, uint16_t time_to_next )
 {
   if ( !has_remote_addr ) {
@@ -342,6 +353,30 @@ void Connection::send( string s, uint16_t time_to_next )
       hop_port();
     }
   }
+}
+
+string Connection::recv_raw( void )
+{
+  struct sockaddr_in packet_remote_addr;
+
+  char buf[ Session::RECEIVE_MTU ];
+
+  socklen_t addrlen = sizeof( packet_remote_addr );
+
+  ssize_t received_len = recvfrom( sock, buf, Session::RECEIVE_MTU, 0, (sockaddr *)&packet_remote_addr, &addrlen );
+
+  if ( received_len < 0 ) {
+    throw NetworkException( "recvfrom", errno );
+  }
+
+  if ( received_len > Session::RECEIVE_MTU ) {
+    char buffer[ 2048 ];
+    snprintf( buffer, 2048, "Received oversize datagram (size %d) and limit is %d\n",
+	      static_cast<int>( received_len ), Session::RECEIVE_MTU );
+    throw NetworkException( buffer, errno );
+  }
+
+  return string( buf, received_len );
 }
 
 string Connection::recv( void )

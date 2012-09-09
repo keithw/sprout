@@ -161,6 +161,10 @@ namespace Network {
 
     void send( string s, uint16_t time_to_next = 0 );
     string recv( void );
+
+    void send_raw( string s );
+    string recv_raw( void );
+
     int fd( void ) const { return sock; }
     int get_MTU( void ) const { return MTU; }
 

@@ -166,6 +166,8 @@ int main( int argc, char *argv[] )
     if ( ( packets_to_send > 0 ) || ( time_of_next_transmission <= timestamp() ) ) {
       Sprout::DeliveryForecast forecast = net->forecast();
 
+      fprintf( stderr, "Sending %d packets\n", packets_to_send );
+
       do {
 	string data( 1400, ' ' );
 	assert( data.size() == 1400 );
@@ -192,12 +194,13 @@ int main( int argc, char *argv[] )
 	if ( packets_to_send > 0 ) { packets_to_send--; }
       } while ( packets_to_send > 0 );
 
-      time_of_next_transmission += fallback_interval;
+      time_of_next_transmission = std::max( timestamp() + fallback_interval,
+					    time_of_next_transmission );
     }
 
     /* wait */
     int wait_time = time_of_next_transmission - timestamp();
-    if ( (wait_time < 0) || (packets_to_send > 0) ) {
+    if ( wait_time < 0 ) {
       wait_time = 0;
     }
 

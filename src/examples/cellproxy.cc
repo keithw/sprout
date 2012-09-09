@@ -32,6 +32,9 @@ private:
 
   const uint64_t _ms_delay;
 
+  uint64_t _total_occurrences;
+  uint64_t _used_occurrences;
+
   void prune_schedule( void );
 
   void tick( void );
@@ -49,7 +52,9 @@ DelayQueue::DelayQueue( const uint64_t s_ms_delay, const char *filename, const u
     _pdp(),
     _schedule(),
     _delivered(),
-    _ms_delay( s_ms_delay )
+    _ms_delay( s_ms_delay ),
+    _total_occurrences( 0 ),
+    _used_occurrences( 0 )
 {
   FILE *f = fopen( filename, "r" );
   if ( f == NULL ) {
@@ -103,6 +108,7 @@ void DelayQueue::prune_schedule( void )
   while ( (!_schedule.empty())
 	  && (_schedule.front() < now) ) {
     _schedule.pop();
+    _total_occurrences++;
   }
 }
 
@@ -142,7 +148,11 @@ void DelayQueue::tick( void )
     _delivered.push_back( packet );
     _pdp.pop();
     _schedule.pop();
+    _total_occurrences++;
+    _used_occurrences++;
   }
+
+  fprintf( stderr, "Utilization: %.1f%%\n", 100.0 * double(_used_occurrences) / double(_total_occurrences) );
 }
 
 int main( int argc, char *argv[] )
@@ -167,8 +177,8 @@ int main( int argc, char *argv[] )
 
   /* Read in schedule */
   uint64_t now = timestamp();
-  DelayQueue uplink( 30, up_filename, now );
-  DelayQueue downlink( 30, down_filename, now );
+  DelayQueue uplink( 20, up_filename, now );
+  DelayQueue downlink( 20, down_filename, now );
 
   Select &sel = Select::get_instance();
   sel.add_fd( server.fd() );

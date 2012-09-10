@@ -91,8 +91,8 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int fallback_interval = 1000;
-  const int TARGET_DELAY_TICKS = 5;
+  const int fallback_interval = 100;
+  const int TARGET_DELAY_TICKS = 15;
 
   /* wait to get attached */
   if ( server ) {
@@ -164,9 +164,8 @@ int main( int argc, char *argv[] )
     */
 
     /* actually send, maybe */
+    Sprout::DeliveryForecast forecast = net->forecast();
     if ( ( packets_to_send > 0 ) || ( time_of_next_transmission <= timestamp() ) ) {
-      Sprout::DeliveryForecast forecast = net->forecast();
-
       //      fprintf( stderr, "Sending %d packets\n", packets_to_send );
 
       do {

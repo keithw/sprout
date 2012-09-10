@@ -90,7 +90,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
 
 int DelayQueue::wait_time( void )
 {
-  int delay_wait = INT_MAX, pdp_wait = INT_MAX;
+  int delay_wait = 100, pdp_wait = 100;
 
   if ( !_delay.empty() ) {
     delay_wait = _delay.front().release_time - timestamp();
@@ -157,19 +157,14 @@ void DelayQueue::tick( void )
     _schedule.pop();
     _total_occurrences++;
     _used_occurrences++;
-    fprintf( stderr, "%s %d delivery %d\n", _name.c_str(), (int)timestamp(), int(timestamp() - packet.entry_time) );
+    fprintf( stderr, "%s %f delivery %d\n", _name.c_str(), now / 1000.0, int(now - packet.entry_time) );
   }
 
-  fprintf( stderr, "%s Utilization: %.1f%%, Occupancy: %lu, In-flight: %lu\n",
-	   _name.c_str(),
-	   100.0 * double(_used_occurrences) / double(_total_occurrences),
-	   _pdp.size(),
-	   _delay.size() );
-
-  if ( timestamp() / 1000 != _bin_sec ) {
+  while ( now / 1000 > _bin_sec ) {
+    fprintf( stderr, "%s %ld %ld / %ld = %.1f %%\n", _name.c_str(), _bin_sec, _used_occurrences, _total_occurrences, 100.0 * _used_occurrences / (double) _total_occurrences );
     _total_occurrences = 0;
     _used_occurrences = 0;
-    _bin_sec = timestamp() / 1000;
+    _bin_sec++;
   }
 }
 

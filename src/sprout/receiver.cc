@@ -9,7 +9,7 @@ Receiver::Receiver()
 	      OUTAGE_ESCAPE_RATE,
 	      NUM_BINS ),
     _forecastr(),
-    _time( -1 ),
+    _time( 0 ),
     _score_time( -1 ),
     _count_this_tick( 0 ),
     _cached_forecast(),

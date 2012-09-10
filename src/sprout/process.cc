@@ -84,9 +84,16 @@ void Process::evolve( const double time )
 								zfactor = ( new_index != 0 ) ? zero_escape_probability : (1 - zero_escape_probability);
 							      }
 							      
-							      const double contribution = zfactor * old_prob
+							      double contribution = zfactor * old_prob
 								* ( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate )
 								    - _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) );
+
+							      assert( !isnan( zfactor ) );
+							      assert( !isnan( old_prob ) );
+							      assert( !isnan( new_rate ) );
+							      assert( !isnan( old_rate ) );
+							      assert( !isnan( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate ) ) );
+							      assert( !isnan( _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) ) );
 
 							      assert( contribution >= 0.0 );
 							      assert( contribution <= 1.0 );

@@ -62,7 +62,7 @@ Sprout::DeliveryForecast Receiver::forecast( void )
     _cached_forecast.clear_counts();
 
     for ( auto it = _forecastr.begin(); it != _forecastr.end(); it++ ) {
-      _cached_forecast.add_counts( it->lower_quantile( _process, 0.25 ) );
+      _cached_forecast.add_counts( it->lower_quantile( _process, 0.05 ) );
     }
 
     return _cached_forecast;

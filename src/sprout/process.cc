@@ -9,7 +9,7 @@ using namespace boost::math;
 
 Process::Process( const double maximum_rate, const double s_brownian_motion_rate, const double s_outage_escape_rate, const int bins )
   : _probability_mass_function( bins, maximum_rate, 0 ),
-    _gaussian( maximum_rate, bins * 2 ),
+    _gaussian( maximum_rate, bins * 128 ),
     _brownian_motion_rate( s_brownian_motion_rate ),
     _outage_escape_rate( s_outage_escape_rate ),
     _normalized( false )
@@ -67,6 +67,8 @@ void Process::evolve( const double time )
   new_pmf.for_each( [] ( const double, double & value, const unsigned int ) { value = 0; } );
 
   const double zero_escape_probability = 1 - poissonpdf( time * _outage_escape_rate, 0 );
+  assert( zero_escape_probability >= 0 );
+  assert( zero_escape_probability <= 1.0 );
 
   _probability_mass_function.for_each( [&]
 				       ( const double old_rate, const double & old_prob, const unsigned int old_index )
@@ -82,9 +84,14 @@ void Process::evolve( const double time )
 								zfactor = ( new_index != 0 ) ? zero_escape_probability : (1 - zero_escape_probability);
 							      }
 							      
-							      new_prob += zfactor * old_prob
+							      const double contribution = zfactor * old_prob
 								* ( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate )
 								    - _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) );
+
+							      assert( contribution >= 0.0 );
+							      assert( contribution <= 1.0 );
+
+							      new_prob += contribution;
 							    } );
 				       } );
   

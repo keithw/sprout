@@ -32,7 +32,10 @@ void Receiver::advance_to( const uint64_t time )
     _process.evolve( .001 * TICK_LENGTH );
     if ( (_time >= _score_time) || (_count_this_tick > 0) ) {
       _process.observe( .001 * TICK_LENGTH, _count_this_tick );
+      fprintf( stderr, "tick(%d) ", _count_this_tick );
       _count_this_tick = 0;
+    } else {
+      fprintf( stderr, "-SKIP-" );
     }
     _time += TICK_LENGTH;
   }
@@ -59,7 +62,7 @@ Sprout::DeliveryForecast Receiver::forecast( void )
     _cached_forecast.clear_counts();
 
     for ( auto it = _forecastr.begin(); it != _forecastr.end(); it++ ) {
-      _cached_forecast.add_counts( it->lower_quantile( _process, 0.10 ) );
+      _cached_forecast.add_counts( it->lower_quantile( _process, 0.25 ) );
     }
 
     return _cached_forecast;
@@ -69,7 +72,7 @@ Sprout::DeliveryForecast Receiver::forecast( void )
 void Receiver::RecvQueue::recv( const uint64_t seq, const uint16_t throwaway_window )
 {
   received_sequence_numbers.push( seq );
-  throwaway_before = seq - throwaway_window;
+  throwaway_before = std::max( throwaway_before, seq - throwaway_window );
 }
 
 uint64_t Receiver::RecvQueue::packet_count( void )

@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "processforecaster.hh"
 
@@ -32,6 +33,8 @@ ProcessForecastTick::ProcessForecastTick( const double tick_time,
     double total = 0.0;
     for ( unsigned int i = 0; i < upper_limit; i++ ) {
       const double prob = it->count_probability( tick_time, i );
+      assert( prob >= 0 );
+      assert( prob <= 1.0 );
       this_count_probability.push_back( prob );
       total += prob;
     }
@@ -51,14 +54,13 @@ double ProcessForecastTick::probability( const Process & ensemble, unsigned int 
 
   assert( count < _count_probability[ 0 ].size() );
 
-  double ret = 0.0;
+  double ret = ensemble.pmf().summation( _count_probability, count );
 
-  ensemble.pmf().for_each( [&] ( const double, const double & value, unsigned int index )
-			   {
-			     ret += value * _count_probability[ index ][ count ];
-			   } );
+  assert( ret <= 1.0 + 1e-10 );
 
-  assert( ret <= 1.0 );
+  if ( ret > 1.0 ) {
+    ret = 1.0;
+  }
 
   return ret;
 }

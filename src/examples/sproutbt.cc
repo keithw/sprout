@@ -91,7 +91,7 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int fallback_interval = 100;
+  const int fallback_interval = 1000;
   const int TARGET_DELAY_TICKS = 5;
 
   /* wait to get attached */
@@ -138,20 +138,21 @@ int main( int argc, char *argv[] )
       current_queue_estimate = 0;
     }
 
+    //    fprintf( stderr, "Current queue estimate: %d\n", current_queue_estimate );
+
     int cumulative_delivery_tick = current_forecast_tick + TARGET_DELAY_TICKS;
     if ( cumulative_delivery_tick >= operative_forecast.counts_size() ) {
       cumulative_delivery_tick = operative_forecast.counts_size() - 1;
     }
 
-    int cumulative_delivery_forecast = operative_forecast.counts( cumulative_delivery_tick );
+    int cumulative_delivery_forecast = operative_forecast.counts( cumulative_delivery_tick ) - operative_forecast.counts( current_forecast_tick );
 
     int packets_to_send = cumulative_delivery_forecast - current_queue_estimate;
 
-    /*
-    fprintf( stderr, "Current tick=%d (%d packets), target tick=%d (%d packets)\n",
-	     current_forecast_tick, operative_forecast.counts( current_forecast_tick ),
-	     cumulative_delivery_tick, cumulative_delivery_forecast );
-    */
+    fprintf( stderr, "DeQueEst = %d, CurQueEst = %d, SRTT=%f, Current tick=%d (%d packets), target tick=%d (%d packets), sending %d packets\n",
+	     (int)delayed_queue_estimate, (int)current_queue_estimate, net->get_SRTT(), current_forecast_tick, operative_forecast.counts( current_forecast_tick ),
+	     cumulative_delivery_tick, cumulative_delivery_forecast, packets_to_send );
+
 
     if ( packets_to_send < 0 ) {
       packets_to_send = 0;
@@ -166,7 +167,7 @@ int main( int argc, char *argv[] )
     if ( ( packets_to_send > 0 ) || ( time_of_next_transmission <= timestamp() ) ) {
       Sprout::DeliveryForecast forecast = net->forecast();
 
-      fprintf( stderr, "Sending %d packets\n", packets_to_send );
+      //      fprintf( stderr, "Sending %d packets\n", packets_to_send );
 
       do {
 	string data( 1400, ' ' );
@@ -177,16 +178,18 @@ int main( int argc, char *argv[] )
 	if ( forecast.time() != time_of_last_forecast ) {
 	  bp.add_forecast( forecast );
 	  time_of_last_forecast = forecast.time();
-	  
+
+	  /*
 	  fprintf( stderr, "Sent counts:" );
 	  for ( int i = 0; i < forecast.counts_size(); i++ ) {
 	    fprintf( stderr, " %d", forecast.counts( i ) );
 	  }
 	  fprintf( stderr, "\n" );
+	  */
 	}
 
 	uint16_t time_to_next = 0;
-	if ( packets_to_send == 1 ) {
+	if ( packets_to_send <= 1 ) {
 	  time_to_next = 500;
 	}
 
@@ -202,6 +205,8 @@ int main( int argc, char *argv[] )
     int wait_time = time_of_next_transmission - timestamp();
     if ( wait_time < 0 ) {
       wait_time = 0;
+    } else if ( wait_time > 10 ) {
+      wait_time = 10;
     }
 
     int active_fds = sel.select( wait_time );
@@ -216,7 +221,6 @@ int main( int argc, char *argv[] )
       
       if ( packet.has_forecast() ) {
 	operative_forecast = packet.forecast();
-	assert( operative_forecast.counts_size() == 10 );
 
 	forecast_timestamp = timestamp() - (net->get_SRTT() / 2.0);
 

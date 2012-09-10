@@ -38,6 +38,8 @@ private:
   uint64_t _total_occurrences;
   uint64_t _used_occurrences;
 
+  uint64_t _bin_sec;
+
   void prune_schedule( void );
 
   void tick( void );
@@ -58,7 +60,8 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
     _delivered(),
     _ms_delay( s_ms_delay ),
     _total_occurrences( 0 ),
-    _used_occurrences( 0 )
+    _used_occurrences( 0 ),
+    _bin_sec( timestamp() / 1000 )
 {
   FILE *f = fopen( filename, "r" );
   if ( f == NULL ) {
@@ -162,6 +165,12 @@ void DelayQueue::tick( void )
 	   100.0 * double(_used_occurrences) / double(_total_occurrences),
 	   _pdp.size(),
 	   _delay.size() );
+
+  if ( timestamp() / 1000 != _bin_sec ) {
+    _total_occurrences = 0;
+    _used_occurrences = 0;
+    _bin_sec = timestamp() / 1000;
+  }
 }
 
 int main( int argc, char *argv[] )

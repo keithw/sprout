@@ -15,10 +15,10 @@ private:
   static constexpr double MAX_ARRIVAL_RATE = 2000;
   static constexpr double BROWNIAN_MOTION_RATE = 300;
   static constexpr double OUTAGE_ESCAPE_RATE = 5;
-  static const int NUM_BINS = 64;
-  static const int TICK_LENGTH = 20;
+  static const int NUM_BINS = 128;
+  static const int TICK_LENGTH = 10;
   static const int MAX_ARRIVALS_PER_TICK = 30;
-  static const int NUM_TICKS = 10;
+  static const int NUM_TICKS = 20;
 
   class RecvQueue {
   private:

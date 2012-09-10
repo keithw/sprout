@@ -1,6 +1,7 @@
 #include "sampledfunction.hh"
 
 #include <assert.h>
+#include <stdio.h>
 
 SampledFunction::SampledFunction( const int num_samples,
 					   const double maximum_value,

@@ -2,7 +2,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS) $(PICKY_CXXFLAGS) $(HARDEN_CFLAGS) $(MISC_CXXF
 AM_LDFLAGS  = $(HARDEN_LDFLAGS)
 
 if BUILD_EXAMPLES
-  noinst_PROGRAMS = encrypt decrypt ntester parse termemu benchmark sproutbt cellproxy
+  noinst_PROGRAMS = encrypt decrypt ntester parse termemu benchmark sproutbt cellproxy cellsim
 endif
 
 encrypt_SOURCES = encrypt.cc
@@ -36,3 +36,7 @@ sproutbt_LDADD = ../network/libmoshnetwork.a ../sprout/libsprout.a ../crypto/lib
 cellproxy_SOURCES = cellproxy.cc
 cellproxy_CPPFLAGS = -I$(srcdir)/../util -I$(srcdir)/../network -I$(srcdir)/../crypto -I$(srcdir)/../sprout -I../protobufs $(protobuf_CFLAGS)
 cellproxy_LDADD = ../network/libmoshnetwork.a ../sprout/libsprout.a ../crypto/libmoshcrypto.a ../protobufs/libmoshprotos.a ../util/libmoshutil.a $(LIBUTIL) -lm $(protobuf_LIBS)  $(OPENSSL_LIBS)
+
+cellsim_SOURCES = cellsim.cc
+cellsim_CPPFLAGS = -I$(srcdir)/../util -I$(srcdir)/../network -I$(srcdir)/../crypto -I$(srcdir)/../sprout -I../protobufs $(protobuf_CFLAGS)
+cellsim_LDADD = ../network/libmoshnetwork.a ../sprout/libsprout.a ../crypto/libmoshcrypto.a ../protobufs/libmoshprotos.a ../util/libmoshutil.a $(LIBUTIL) -lm $(protobuf_LIBS)  $(OPENSSL_LIBS)

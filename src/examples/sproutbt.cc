@@ -91,7 +91,7 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int fallback_interval = 100;
+  const int fallback_interval = 250;
   const int TARGET_DELAY_TICKS = 15;
 
   /* wait to get attached */
@@ -221,7 +221,7 @@ int main( int argc, char *argv[] )
       if ( packet.has_forecast() ) {
 	operative_forecast = packet.forecast();
 
-	forecast_timestamp = timestamp() - (net->get_SRTT() / 2.0);
+	forecast_timestamp = timestamp(); // - (net->get_SRTT() / 2.0);
 
 	fprintf( stderr, "Received counts:" );
 	for ( int i = 0; i < operative_forecast.counts_size(); i++ ) {

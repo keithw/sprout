@@ -440,7 +440,7 @@ string Connection::recv( void )
       uint16_t now = timestamp16();
       double R = timestamp_diff( now, p.timestamp_reply );
 
-      if ( R < 5000 ) { /* ignore large values, e.g. server was Ctrl-Zed */
+      if ( R < 50000 ) { /* ignore very large values */
 	if ( !RTT_hit ) { /* first measurement */
 	  SRTT = R;
 	  RTTVAR = R / 2;

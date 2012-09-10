@@ -12,10 +12,10 @@
 class Receiver
 {
 private:
-  static constexpr double MAX_ARRIVAL_RATE = 2000;
-  static constexpr double BROWNIAN_MOTION_RATE = 300;
+  static constexpr double MAX_ARRIVAL_RATE = 1500;
+  static constexpr double BROWNIAN_MOTION_RATE = 100;
   static constexpr double OUTAGE_ESCAPE_RATE = 1;
-  static const int NUM_BINS = 64;
+  static const int NUM_BINS = 128;
   static const int TICK_LENGTH = 10;
   static const int MAX_ARRIVALS_PER_TICK = 30;
   static const int NUM_TICKS = 50;

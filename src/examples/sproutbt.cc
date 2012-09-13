@@ -92,7 +92,7 @@ int main( int argc, char *argv[] )
   sel.add_fd( net->fd() );
 
   const int fallback_interval = 5000;
-  const int TARGET_DELAY_TICKS = 10;
+  const int TARGET_DELAY_TICKS = 5;
 
   /* wait to get attached */
   if ( server ) {

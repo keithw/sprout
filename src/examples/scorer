@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $time = -1;
+my $last_packet_sent = -1;
+my $desired_direction = shift @ARGV;
+
+print STDERR "Looking at direction $desired_direction...\n";
+
+my $used = 0;
+my $available = 0;
+
+while ( <> ) {
+  chomp;
+  my ( $dir, $new_time, $del, $ms_old ) = split /\s+/, $_;
+
+  next unless $dir eq $desired_direction;
+  if ( m{/.*%} ) {
+    my ( $dir, $sec, $this_used, $slash, $this_avail ) = split /\s+/, $_;
+    $used += $this_used;
+    $available += $this_avail;
+    next;
+  }
+
+  if ( $time == -1 ) {
+    $time = $new_time;
+  }
+
+  while ( $time < $new_time ) {
+    my $age = $time - .001 * $last_packet_sent;
+    printf "%f\n", $age;
+    $time += 0.001;
+  }
+
+  my $new_last_packet_sent = 1000 * $new_time - $ms_old;
+  last unless int(1000*$new_last_packet_sent) >= int(1000*$last_packet_sent);
+  $last_packet_sent = $new_last_packet_sent;
+}
+
+printf STDERR "Used $used / $available => %f %% \n", 100.0 * $used / $available;

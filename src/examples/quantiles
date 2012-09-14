@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my @input;
+
+while ( <> ) {
+  chomp;
+  push @input, $_;
+}
+
+@input = sort { $b <=> $a } @input;
+
+my $num = scalar @input;
+
+my $median = $input[ .5 * $num ];
+my $ninefive = $input[ .05 * $num ];
+
+print "med: $median, 95th: $ninefive\n";

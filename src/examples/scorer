@@ -16,6 +16,9 @@ while ( <> ) {
   my ( $dir, $new_time, $del, $ms_old ) = split /\s+/, $_;
 
   next unless $dir eq $desired_direction;
+
+  next unless ( $new_time >= 60 );
+
   if ( m{/.*%} ) {
     my ( $dir, $sec, $this_used, $slash, $this_avail ) = split /\s+/, $_;
     $used += $this_used;

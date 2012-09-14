@@ -11,13 +11,23 @@ print STDERR "Looking at direction $desired_direction...\n";
 my $used = 0;
 my $available = 0;
 
+my $tsoffset = -1;
+
 while ( <> ) {
   chomp;
   my ( $dir, $new_time, $del, $ms_old ) = split /\s+/, $_;
 
   next unless $dir eq $desired_direction;
 
-  next unless ( $new_time >= 60 );
+  $new_time = int( $new_time * 1000 + 0.5 );
+
+  if ( $tsoffset == -1 ) {
+    $tsoffset = $new_time;
+  }
+
+  $new_time -= $tsoffset;
+
+  next unless ( $new_time >= 60000 );
 
   if ( m{/.*%} ) {
     my ( $dir, $sec, $this_used, $slash, $this_avail ) = split /\s+/, $_;
@@ -31,13 +41,13 @@ while ( <> ) {
   }
 
   while ( $time < $new_time ) {
-    my $age = $time - .001 * $last_packet_sent;
-    printf "%f\n", $age;
-    $time += 0.001;
+    my $age = $time - $last_packet_sent;
+    printf "%d\n", $age;
+    $time++;
   }
 
-  my $new_last_packet_sent = 1000 * $new_time - $ms_old;
-  last unless int(1000*$new_last_packet_sent) >= int(1000*$last_packet_sent);
+  my $new_last_packet_sent = $new_time - $ms_old;
+  die unless ( $new_last_packet_sent >= $last_packet_sent );
   $last_packet_sent = $new_last_packet_sent;
 }
 

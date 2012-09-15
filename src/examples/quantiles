@@ -13,10 +13,12 @@ while ( <> ) {
   $max_time = $time;
 }
 
+my $delay = 0; # 60000
+
 my @input;
 for ( @input_unfiltered ) {
   my ( $time, $val ) = @{ $_ };
-  if ( $time < $max_time - 60000 ) {
+  if ( $time < $max_time - $delay ) {
     push @input, $val;
   }
 }

@@ -74,10 +74,6 @@ void Transport<MyState, RemoteState>::recv( void )
   if ( fragments.add_fragment( frag ) ) { /* complete packet */
     Instruction inst = fragments.get_assembly();
 
-    if ( inst.protocol_version() != MOSH_PROTOCOL_VERSION ) {
-      throw NetworkException( "mosh protocol version mismatch", 0 );
-    }
-
     sender.process_acknowledgment_through( inst.ack_num() );
 
     /* inform network layer of roundtrip (end-to-end-to-end) connectivity */

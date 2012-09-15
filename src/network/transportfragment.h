@@ -93,17 +93,13 @@ namespace Network {
   {
   private:
     uint64_t next_instruction_id;
-    Instruction last_instruction;
-    int last_MTU;
 
   public:
-    Fragmenter() : next_instruction_id( 0 ), last_instruction(), last_MTU( -1 )
+    Fragmenter() : next_instruction_id( 0 )
     {
-      last_instruction.set_old_num( -1 );
-      last_instruction.set_new_num( -1 );
     }
     vector<Fragment> make_fragments( const Instruction &inst, int MTU );
-    uint64_t last_ack_sent( void ) const { return last_instruction.ack_num(); }
+    //    uint64_t last_ack_sent( void ) const { return last_instruction.ack_num(); }
   };
   
 }

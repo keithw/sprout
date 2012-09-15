@@ -50,7 +50,7 @@ namespace Network {
   /* timing parameters */
   const int SEND_INTERVAL_MIN = 20; /* ms between frames */
   const int SEND_INTERVAL_MAX = 250; /* ms between frames */
-  const int ACK_INTERVAL = 3000; /* ms between empty acks */
+  const int ACK_INTERVAL = 50; /* ms between empty acks */
   const int ACK_DELAY = 100; /* ms before delayed ack */
   const int SHUTDOWN_RETRIES = 16; /* number of shutdown packets to send before giving up */
   const int ACTIVE_RETRY_TIMEOUT = 10000; /* attempt to resend at frame rate */
@@ -137,7 +137,7 @@ namespace Network {
 
     bool get_shutdown_in_progress( void ) const { return shutdown_in_progress; }
     bool get_shutdown_acknowledged( void ) const { return sent_states.front().num == uint64_t(-1); }
-    bool get_counterparty_shutdown_acknowledged( void ) const { return fragmenter.last_ack_sent() == uint64_t(-1); }
+    //    bool get_counterparty_shutdown_acknowledged( void ) const { return fragmenter.last_ack_sent() == uint64_t(-1); }
     uint64_t get_sent_state_acked_timestamp( void ) const { return sent_states.front().timestamp; }
     uint64_t get_sent_state_acked( void ) const { return sent_states.front().num; }
     uint64_t get_sent_state_last( void ) const { return sent_states.back().num; }

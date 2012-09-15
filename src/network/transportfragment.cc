@@ -154,21 +154,7 @@ bool Fragment::operator==( const Fragment &x )
 
 vector<Fragment> Fragmenter::make_fragments( const Instruction &inst, int MTU )
 {
-  if ( (inst.old_num() != last_instruction.old_num())
-       || (inst.new_num() != last_instruction.new_num())
-       || (inst.ack_num() != last_instruction.ack_num())
-       || (inst.throwaway_num() != last_instruction.throwaway_num())
-       || (last_MTU != MTU) ) {
-    next_instruction_id++;
-  }
-
-  if ( (inst.old_num() == last_instruction.old_num())
-       && (inst.new_num() == last_instruction.new_num()) ) {
-    assert( inst.diff() == last_instruction.diff() );
-  }
-
-  last_instruction = inst;
-  last_MTU = MTU;
+  next_instruction_id++;
 
   string payload = inst.SerializeAsString();
   uint16_t fragment_num = 0;

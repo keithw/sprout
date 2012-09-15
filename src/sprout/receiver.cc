@@ -36,10 +36,10 @@ void Receiver::advance_to( const uint64_t time )
 	discrete_observe = 1;
       }
       _process.observe( .001 * TICK_LENGTH, discrete_observe );
-      fprintf( stderr, "tick(%f) ", _count_this_tick );
+      //      fprintf( stderr, "tick(%f) ", _count_this_tick );
       _count_this_tick = 0;
     } else {
-      fprintf( stderr, "-SKIP-" );
+      //      fprintf( stderr, "-SKIP-" );
     }
     _time += TICK_LENGTH;
   }

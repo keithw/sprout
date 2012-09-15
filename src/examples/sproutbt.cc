@@ -91,7 +91,7 @@ int main( int argc, char *argv[] )
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );
 
-  const int fallback_interval = 5000;
+  const int fallback_interval = 500;
   const int TARGET_DELAY_TICKS = 5;
 
   /* wait to get attached */
@@ -171,8 +171,12 @@ int main( int argc, char *argv[] )
       //      fprintf( stderr, "Sending %d packets\n", packets_to_send );
 
       do {
-	string data( 1400, ' ' );
-	assert( data.size() == 1400 );
+	int size_to_send = 10;
+	if ( packets_to_send > 0 ) {
+	  size_to_send = 1400;
+	}
+
+	string data( size_to_send, ' ' );
 
 	BulkPacket bp( false, data );
 

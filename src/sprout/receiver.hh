@@ -13,12 +13,12 @@ class Receiver
 {
 private:
   static constexpr double MAX_ARRIVAL_RATE = 1000;
-  static constexpr double BROWNIAN_MOTION_RATE = 100;
-  static constexpr double OUTAGE_ESCAPE_RATE = 2;
+  static constexpr double BROWNIAN_MOTION_RATE = 200;
+  static constexpr double OUTAGE_ESCAPE_RATE = 1;
   static const int NUM_BINS = 100;
   static const int TICK_LENGTH = 20;
   static const int MAX_ARRIVALS_PER_TICK = 30;
-  static const int NUM_TICKS = 20;
+  static const int NUM_TICKS = 10;
 
   class RecvQueue {
   private:

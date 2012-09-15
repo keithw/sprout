@@ -33,6 +33,7 @@
 #include <iostream>
 
 #include "networktransport.h"
+#include "fatal_assert.h"
 
 #include "transportsender.cc"
 

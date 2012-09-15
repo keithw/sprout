@@ -30,12 +30,7 @@
     also delete it here.
 */
 
-#include <termios.h>
-#include <unistd.h>
-
-#include "user.h"
-#include "fatal_assert.h"
-#include "pty_compat.h"
+#include "flood.h"
 #include "networktransport.cc"
 #include "select.h"
 
@@ -43,112 +38,42 @@ using namespace Network;
 
 int main( int argc, char *argv[] )
 {
-  bool server = true;
-  char *key;
   char *ip;
   int port;
 
-  UserStream me, remote;
+  Flood me, remote;
 
-  Transport<UserStream, UserStream> *n;
+  Transport<Flood, Flood> *n;
 
-  try {
-    if ( argc > 1 ) {
-      server = false;
-      /* client */
+  if ( argc > 1 ) {
+    /* client */
+    
+    ip = argv[ 1 ];
+    port = atoi( argv[ 2 ] );
       
-      key = argv[ 1 ];
-      ip = argv[ 2 ];
-      port = atoi( argv[ 3 ] );
-      
-      n = new Transport<UserStream, UserStream>( me, remote, key, ip, port );
-    } else {
-      n = new Transport<UserStream, UserStream>( me, remote, NULL, NULL );
-    }
-  } catch ( CryptoException e ) {
-    fprintf( stderr, "Fatal error: %s\n", e.text.c_str() );
-    exit( 1 );
+    n = new Transport<Flood, Flood>( me, remote, "4h/Td1v//4jkYhqhLGgegw", ip, port );
+  } else {
+    n = new Transport<Flood, Flood>( me, remote, NULL, NULL );
   }
-
+  
   fprintf( stderr, "Port bound is %d\n", n->port() );
 
-  if ( server ) {
-    Select &sel = Select::get_instance();
-    sel.add_fd( n->fd() );
-    uint64_t last_num = n->get_remote_state_num();
-    while ( true ) {
-      try {
-	if ( sel.select( n->wait_time() ) < 0 ) {
-	  perror( "select" );
-	  exit( 1 );
-	}
-	
-	n->tick();
+  Select &sel = Select::get_instance();
+  sel.add_fd( n->fd() );
 
-	if ( sel.read( n->fd() ) ) {
-	  n->recv();
-
-	  if ( n->get_remote_state_num() != last_num ) {
-	    //	    fprintf( stderr, "[%d=>%d %s]", (int)last_num, (int)n->get_remote_state_num(), n->get_remote_diff().c_str() );
-	    last_num = n->get_remote_state_num();
-	  }
-	}
-      } catch ( CryptoException e ) {
-	fprintf( stderr, "Cryptographic error: %s\n", e.text.c_str() );
-      }
-    }
-  } else {
-    struct termios saved_termios;
-    struct termios the_termios;
-
-    if ( tcgetattr( STDIN_FILENO, &the_termios ) < 0 ) {
-      perror( "tcgetattr" );
+  while ( 1 ) {
+    int active_fds = sel.select( n->wait_time() );
+    if ( active_fds < 0 ) {
+      perror( "select" );
       exit( 1 );
     }
-
-    saved_termios = the_termios;
-
-    cfmakeraw( &the_termios );
-
-    if ( tcsetattr( STDIN_FILENO, TCSANOW, &the_termios ) < 0 ) {
-      perror( "tcsetattr" );
-      exit( 1 );
+    
+    n->tick();
+    
+    if ( sel.read( n->fd() ) ) {
+      n->recv();
     }
-
-    Select &sel = Select::get_instance();
-    sel.add_fd( STDIN_FILENO );
-    sel.add_fd( n->fd() );
-
-    while( true ) {
-      try {
-	if ( sel.select( n->wait_time() ) < 0 ) {
-	  perror( "select" );
-	}
-
-	n->tick();
-
-	if ( sel.read( STDIN_FILENO ) ) {
-	  char x;
-	  fatal_assert( read( STDIN_FILENO, &x, 1 ) == 1 );
-	  n->get_current_state().push_back( Parser::UserByte( x ) );
-	}
-
-	if ( sel.read( n->fd() ) ) {
-	  n->recv();
-	}
-      } catch ( NetworkException e ) {
-	fprintf( stderr, "%s: %s\r\n", e.function.c_str(), strerror( e.the_errno ) );
-	break;
-      } catch ( CryptoException e ) {
-	fprintf( stderr, "Cryptographic error: %s\n", e.text.c_str() );
-      }
-    }
-
-    if ( tcsetattr( STDIN_FILENO, TCSANOW, &saved_termios ) < 0 ) {
-      perror( "tcsetattr" );
-      exit( 1 );
-    }    
   }
-
+ 
   delete n;
 }

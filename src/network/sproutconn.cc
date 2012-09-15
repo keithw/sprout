@@ -49,6 +49,7 @@ string SproutConnection::recv( void )
   return packet.data();
 }
 
+/* could be simplified to just packets_to_send = forecast@(cur+target) - dqe */
 int SproutConnection::window_size( void ) const
 {
   uint64_t now = timestamp();

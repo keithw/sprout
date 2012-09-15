@@ -76,7 +76,7 @@ int main( int argc, char *argv[] )
 
 	int time_to_next = 0;
 	if ( bytes_to_send == 0 ) {
-	  time_to_next = 500;
+	  time_to_next = fallback_interval;
 	}
 
 	net->send( garbage, time_to_next );

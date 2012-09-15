@@ -73,7 +73,7 @@ namespace Network {
     string payload;
     
     Packet( uint64_t s_seq, Direction s_direction,
-	    uint16_t s_timestamp, uint16_t s_timestamp_reply, uint16_t s_throwaway_window, uint16_t s_time_to_next, string s_payload )
+	    uint16_t s_timestamp, uint16_t s_timestamp_reply, uint16_t s_throwaway_window, uint16_t s_time_to_next, const string & s_payload )
       : seq( s_seq ), direction( s_direction ),
       timestamp( s_timestamp ), timestamp_reply( s_timestamp_reply ), throwaway_window( s_throwaway_window ), time_to_next( s_time_to_next ),
 	payload( s_payload )
@@ -142,7 +142,7 @@ namespace Network {
     bool have_send_exception;
     NetworkException send_exception;
 
-    Packet new_packet( string &s_payload, uint16_t time_to_next );
+    Packet new_packet( const string &s_payload, uint16_t time_to_next );
 
     void hop_port( void );
 
@@ -157,7 +157,7 @@ namespace Network {
     Connection( const char *key_str, const char *ip, int port ); /* client */
     ~Connection();
 
-    void send( string s, uint16_t time_to_next = 0 );
+    void send( const string & s, uint16_t time_to_next = 0 );
     string recv( void );
 
     void send_raw( string s );

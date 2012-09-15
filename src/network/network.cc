@@ -95,7 +95,7 @@ string Packet::tostring( Session *session )
   return session->encrypt( Message( Nonce( direction_seq ), timestamps + payload ) );
 }
 
-Packet Connection::new_packet( string &s_payload, uint16_t time_to_next )
+Packet Connection::new_packet( const string &s_payload, uint16_t time_to_next )
 {
   uint16_t outgoing_timestamp_reply = -1;
 
@@ -110,7 +110,9 @@ Packet Connection::new_packet( string &s_payload, uint16_t time_to_next )
 
   uint16_t throwaway_window = send_queue.add( next_seq + 1 );
 
-  Packet p( next_seq++, direction, timestamp16(), outgoing_timestamp_reply, throwaway_window, time_to_next, s_payload );
+  Packet p( next_seq, direction, timestamp16(), outgoing_timestamp_reply, throwaway_window, time_to_next, s_payload );
+
+  next_seq += s_payload.size() + 50;
 
   return p;
 }
@@ -318,7 +320,7 @@ void Connection::send_raw( string s )
 
 }
 
-void Connection::send( string s, uint16_t time_to_next )
+void Connection::send( const string & s, uint16_t time_to_next )
 {
   if ( !has_remote_addr ) {
     return;

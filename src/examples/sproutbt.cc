@@ -124,7 +124,7 @@ int main( int argc, char *argv[] )
   /* loop */
   while ( 1 ) {
     /* possibly send packets */
-    uint64_t delayed_queue_estimate = net->get_next_seq() - operative_forecast.received_or_lost_count();
+    uint64_t delayed_queue_estimate = (net->get_next_seq() - operative_forecast.received_or_lost_count()) / 1500;
     int current_forecast_tick = (timestamp() - forecast_timestamp) / net->get_tick_length();
 
     if ( current_forecast_tick < 0 ) {

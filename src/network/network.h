@@ -100,7 +100,7 @@ namespace Network {
   private:
     static const int SEND_MTU = 1400;
     static const uint64_t MIN_RTO = 50; /* ms */
-    static const uint64_t MAX_RTO = 1000; /* ms */
+    static const uint64_t MAX_RTO = 5000; /* ms */
 
     static const int PORT_RANGE_LOW  = 60001;
     static const int PORT_RANGE_HIGH = 60999;

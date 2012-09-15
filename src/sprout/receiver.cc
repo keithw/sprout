@@ -48,7 +48,7 @@ void Receiver::advance_to( const uint64_t time )
 void Receiver::recv( const uint64_t seq, const uint16_t throwaway_window, const uint16_t time_to_next, const size_t len )
 {
   _count_this_tick += len / 1400.0;
-  _recv_queue.recv( seq, throwaway_window );
+  _recv_queue.recv( seq, throwaway_window, len );
   _score_time = std::max( _time + time_to_next, _score_time );
 }
 
@@ -73,22 +73,30 @@ Sprout::DeliveryForecast Receiver::forecast( void )
   }
 }
 
-void Receiver::RecvQueue::recv( const uint64_t seq, const uint16_t throwaway_window )
+void Receiver::RecvQueue::recv( const uint64_t seq, const uint16_t throwaway_window, const int len )
 {
-  received_sequence_numbers.push( seq );
+  received_sequence_numbers.push( PacketLen( seq, len ) );
   throwaway_before = std::max( throwaway_before, seq - throwaway_window );
 }
 
 uint64_t Receiver::RecvQueue::packet_count( void )
 {
-  /* returns cumulative count of packets received or lost */
+  /* returns cumulative count of bytes received or lost */
   while ( !received_sequence_numbers.empty() ) {
-    if ( received_sequence_numbers.top() < throwaway_before ) {
+    if ( received_sequence_numbers.top().seq < throwaway_before ) {
       received_sequence_numbers.pop();
     } else {
       break;
     }
   }
 
-  return throwaway_before + received_sequence_numbers.size();
+  std::priority_queue< PacketLen, std::deque<PacketLen>, PacketLen > copy( received_sequence_numbers );
+
+  int buffer_sum = 0;
+  while ( !copy.empty() ) {
+    buffer_sum += copy.top().len;
+    copy.pop();
+  }
+
+  return throwaway_before + buffer_sum;
 }

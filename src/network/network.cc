@@ -108,9 +108,11 @@ Packet Connection::new_packet( const string &s_payload, uint16_t time_to_next )
     saved_timestamp_received_at = 0;
   }
 
-  uint16_t throwaway_window = send_queue.add( next_seq + 1 );
+  uint16_t throwaway_window = send_queue.add( next_seq );
 
-  Packet p( next_seq++, direction, timestamp16(), outgoing_timestamp_reply, throwaway_window, time_to_next, s_payload );
+  Packet p( next_seq, direction, timestamp16(), outgoing_timestamp_reply, throwaway_window, time_to_next, s_payload );
+
+  next_seq += s_payload.size() + 50;
 
   return p;
 }

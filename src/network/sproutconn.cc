@@ -53,7 +53,7 @@ string SproutConnection::recv( void )
 int SproutConnection::window_size( void ) const
 {
   uint64_t now = timestamp();
-  uint64_t delayed_queue_estimate = conn.get_next_seq() - operative_forecast.received_or_lost_count();
+  uint64_t delayed_queue_estimate = (conn.get_next_seq() - operative_forecast.received_or_lost_count()) / 1500;
 
   int current_forecast_tick = (now - remote_forecast_time) / conn.get_tick_length();
 

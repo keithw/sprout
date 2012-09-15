@@ -31,8 +31,12 @@ void Receiver::advance_to( const uint64_t time )
   while ( _time + TICK_LENGTH < time ) {
     _process.evolve( .001 * TICK_LENGTH );
     if ( (_time >= _score_time) || (_count_this_tick > 0) ) {
-      _process.observe( .001 * TICK_LENGTH, _count_this_tick );
-      fprintf( stderr, "tick(%d) ", _count_this_tick );
+      int discrete_observe = int( _count_this_tick + 0.5 );
+      if ( _count_this_tick > 0 && _count_this_tick < 1 ) {
+	discrete_observe = 1;
+      }
+      _process.observe( .001 * TICK_LENGTH, discrete_observe );
+      fprintf( stderr, "tick(%f) ", _count_this_tick );
       _count_this_tick = 0;
     } else {
       fprintf( stderr, "-SKIP-" );
@@ -41,9 +45,9 @@ void Receiver::advance_to( const uint64_t time )
   }
 }
 
-void Receiver::recv( const uint64_t seq, const uint16_t throwaway_window, const uint16_t time_to_next )
+void Receiver::recv( const uint64_t seq, const uint16_t throwaway_window, const uint16_t time_to_next, const size_t len )
 {
-  _count_this_tick++;
+  _count_this_tick += len / 1400.0;
   _recv_queue.recv( seq, throwaway_window );
   _score_time = std::max( _time + time_to_next, _score_time );
 }

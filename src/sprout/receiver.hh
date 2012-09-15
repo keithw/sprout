@@ -38,7 +38,7 @@ private:
 
   uint64_t _time, _score_time;
 
-  int _count_this_tick;
+  double _count_this_tick;
 
   Sprout::DeliveryForecast _cached_forecast;
 
@@ -49,7 +49,7 @@ public:
   Receiver();
   void warp_to( const uint64_t time ) { _score_time = _time = time; }
   void advance_to( const uint64_t time );
-  void recv( const uint64_t seq, const uint16_t throwaway_window, const uint16_t time_to_next );
+  void recv( const uint64_t seq, const uint16_t throwaway_window, const uint16_t time_to_next, const size_t len );
 
   Sprout::DeliveryForecast forecast( void );
 

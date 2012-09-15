@@ -425,7 +425,7 @@ string Connection::recv( void )
   }
 
   forecastr.advance_to( timestamp() );
-  forecastr.recv( p.seq, p.throwaway_window, p.time_to_next );
+  forecastr.recv( p.seq, p.throwaway_window, p.time_to_next, p.payload.size() );
 
   if ( p.seq >= expected_receiver_seq ) { /* don't use out-of-order packets for timestamp or targeting */
     expected_receiver_seq = p.seq + 1; /* this is security-sensitive because a replay attack could otherwise

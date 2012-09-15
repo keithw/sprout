@@ -39,18 +39,17 @@
 #include <list>
 #include <vector>
 
-#include "network.h"
+#include "sproutconn.h"
 #include "transportsender.h"
 #include "transportfragment.h"
-
 
 namespace Network {
   template <class MyState, class RemoteState>
   class Transport
   {
   private:
-    /* the underlying, encrypted network connection */
-    Connection connection;
+    /* the underlying network connection */
+    SproutConnection connection;
 
     /* sender side */
     TransportSender<MyState> sender;
@@ -94,7 +93,6 @@ namespace Network {
     bool counterparty_shutdown_ack_sent( void ) const { return sender.get_counterparty_shutdown_acknowledged(); }
 
     int port( void ) const { return connection.port(); }
-    string get_key( void ) const { return connection.get_key(); }
 
     MyState &get_current_state( void ) { return sender.get_current_state(); }
     void set_current_state( const MyState &x ) { sender.set_current_state( x ); }
@@ -114,10 +112,6 @@ namespace Network {
     uint64_t get_sent_state_last( void ) const { return sender.get_sent_state_last(); }
 
     unsigned int send_interval( void ) const { return sender.send_interval(); }
-
-    const struct in_addr & get_remote_ip( void ) const { return connection.get_remote_ip(); }
-
-    const NetworkException *get_send_exception( void ) const { return connection.get_send_exception(); }
   };
 }
 

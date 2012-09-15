@@ -70,7 +70,7 @@ int main( int argc, char *argv[] )
     exit( 1 );
   }
 
-  fprintf( stderr, "Port bound is %d, key is %s\n", n->port(), n->get_key().c_str() );
+  fprintf( stderr, "Port bound is %d\n", n->port() );
 
   if ( server ) {
     Select &sel = Select::get_instance();
@@ -89,7 +89,7 @@ int main( int argc, char *argv[] )
 	  n->recv();
 
 	  if ( n->get_remote_state_num() != last_num ) {
-	    fprintf( stderr, "[%d=>%d %s]", (int)last_num, (int)n->get_remote_state_num(), n->get_remote_diff().c_str() );
+	    //	    fprintf( stderr, "[%d=>%d %s]", (int)last_num, (int)n->get_remote_state_num(), n->get_remote_diff().c_str() );
 	    last_num = n->get_remote_state_num();
 	  }
 	}

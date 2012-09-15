@@ -37,7 +37,7 @@
 #include <string>
 #include <list>
 
-#include "network.h"
+#include "sproutconn.h"
 #include "transportinstruction.pb.h"
 #include "transportstate.h"
 #include "transportfragment.h"
@@ -69,7 +69,7 @@ namespace Network {
     void add_sent_state( uint64_t the_timestamp, uint64_t num, MyState &state );
 
     /* state of sender */
-    Connection *connection;
+    SproutConnection *connection;
 
     MyState current_state;
 
@@ -106,7 +106,7 @@ namespace Network {
 
   public:
     /* constructor */
-    TransportSender( Connection *s_connection, MyState &initial_state );
+    TransportSender( SproutConnection *s_connection, MyState &initial_state );
 
     /* Send data or an ack if necessary */
     void tick( void );

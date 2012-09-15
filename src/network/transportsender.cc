@@ -43,7 +43,7 @@ using namespace Network;
 using namespace std;
 
 template <class MyState>
-TransportSender<MyState>::TransportSender( Connection *s_connection, MyState &initial_state )
+TransportSender<MyState>::TransportSender( SproutConnection *s_connection, MyState &initial_state )
   : connection( s_connection ), 
     current_state( initial_state ),
     sent_states( 1, TimestampedState<MyState>( timestamp(), 0, initial_state ) ),
@@ -56,7 +56,7 @@ TransportSender<MyState>::TransportSender( Connection *s_connection, MyState &in
     shutdown_tries( 0 ),
     ack_num( 0 ),
     pending_data_ack( false ),
-    SEND_MINDELAY( 8 ),
+    SEND_MINDELAY( 0 ),
     last_heard( 0 ),
     mindelay_clock( -1 )
 {
@@ -161,18 +161,20 @@ void TransportSender<MyState>::tick( void )
 
   /* Determine if a new diff or empty ack needs to be sent */
     
-  string diff = current_state.diff_from( assumed_receiver_state->state );
+  string diff = current_state.diff_from( assumed_receiver_state->state, connection->window_size() );
 
-  attempt_prospective_resend_optimization( diff );
+  //  attempt_prospective_resend_optimization( diff );
 
+  /*
   if ( verbose ) {
-    /* verify diff has round-trip identity (modulo Unicode fallback rendering) */
+    // verify diff has round-trip identity
     MyState newstate( assumed_receiver_state->state );
     newstate.apply_string( diff );
     if ( current_state.compare( newstate ) ) {
       fprintf( stderr, "Warning, round-trip Instruction verification failed!\n" );
     }
   }
+*/
 
   if ( diff.empty() && (now >= next_ack_time) ) {
     send_empty_ack();

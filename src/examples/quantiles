@@ -2,11 +2,23 @@
 
 use strict;
 
-my @input;
+my @input_unfiltered;
+
+my $max_time = -1;
 
 while ( <> ) {
   chomp;
-  push @input, $_;
+  my ( $time, $val ) = split /\s+/, $_;
+  push @input_unfiltered, [ $time, $val ];
+  $max_time = $time;
+}
+
+my @input;
+for ( @input_unfiltered ) {
+  my ( $time, $val ) = @{ $_ };
+  if ( $time < $max_time - 60000 ) {
+    push @input, $val;
+  }
 }
 
 @input = sort { $b <=> $a } @input;

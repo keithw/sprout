@@ -149,9 +149,11 @@ int main( int argc, char *argv[] )
 
     int packets_to_send = cumulative_delivery_forecast - current_queue_estimate;
 
+    /*
     fprintf( stderr, "DeQueEst = %d, CurQueEst = %d, SRTT=%f, Current tick=%d (%d packets), target tick=%d (%d packets), sending %d packets\n",
 	     (int)delayed_queue_estimate, (int)current_queue_estimate, net->get_SRTT(), current_forecast_tick, operative_forecast.counts( current_forecast_tick ),
 	     cumulative_delivery_tick, cumulative_delivery_forecast, packets_to_send );
+    */
 
 
     if ( packets_to_send < 0 ) {
@@ -223,11 +225,13 @@ int main( int argc, char *argv[] )
 
 	forecast_timestamp = timestamp(); // - (net->get_SRTT() / 2.0);
 
+	/*
 	fprintf( stderr, "Received counts:" );
 	for ( int i = 0; i < operative_forecast.counts_size(); i++ ) {
 	  fprintf( stderr, " %d", operative_forecast.counts( i ) );
 	}
 	fprintf( stderr, "\n" );
+	*/
       }
     }
   }

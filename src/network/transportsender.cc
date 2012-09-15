@@ -58,7 +58,6 @@ TransportSender<MyState>::TransportSender( Connection *s_connection, MyState &in
     pending_data_ack( false ),
     SEND_MINDELAY( 8 ),
     last_heard( 0 ),
-    prng(),
     mindelay_clock( -1 )
 {
 }
@@ -290,17 +289,6 @@ void TransportSender<MyState>::rationalize_states( void )
 }
 
 template <class MyState>
-const string TransportSender<MyState>::make_chaff( void )
-{
-  const size_t CHAFF_MAX = 16;
-  const size_t chaff_len = prng.uint8() % (CHAFF_MAX + 1);
-
-  char chaff[ CHAFF_MAX ];
-  prng.fill( chaff, chaff_len );
-  return string( chaff, chaff_len );
-}
-
-template <class MyState>
 void TransportSender<MyState>::send_in_fragments( string diff, uint64_t new_num )
 {
   Instruction inst;
@@ -311,7 +299,6 @@ void TransportSender<MyState>::send_in_fragments( string diff, uint64_t new_num 
   inst.set_ack_num( ack_num );
   inst.set_throwaway_num( sent_states.front().num );
   inst.set_diff( diff );
-  inst.set_chaff( make_chaff() );
 
   if ( new_num == uint64_t(-1) ) {
     shutdown_tries++;

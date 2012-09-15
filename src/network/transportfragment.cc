@@ -35,7 +35,6 @@
 #include "byteorder.h"
 #include "transportfragment.h"
 #include "transportinstruction.pb.h"
-#include "compressor.h"
 #include "fatal_assert.h"
 
 using namespace Network;
@@ -138,7 +137,7 @@ Instruction FragmentAssembly::get_assembly( void )
   }
 
   Instruction ret;
-  fatal_assert( ret.ParseFromString( get_compressor().uncompress_str( encoded ) ) );
+  fatal_assert( ret.ParseFromString( encoded ) );
 
   fragments.clear();
   fragments_arrived = 0;
@@ -159,7 +158,6 @@ vector<Fragment> Fragmenter::make_fragments( const Instruction &inst, int MTU )
        || (inst.new_num() != last_instruction.new_num())
        || (inst.ack_num() != last_instruction.ack_num())
        || (inst.throwaway_num() != last_instruction.throwaway_num())
-       || (inst.chaff() != last_instruction.chaff())
        || (inst.protocol_version() != last_instruction.protocol_version())
        || (last_MTU != MTU) ) {
     next_instruction_id++;
@@ -173,7 +171,7 @@ vector<Fragment> Fragmenter::make_fragments( const Instruction &inst, int MTU )
   last_instruction = inst;
   last_MTU = MTU;
 
-  string payload = get_compressor().compress_str( inst.SerializeAsString() );
+  string payload = inst.SerializeAsString();
   uint16_t fragment_num = 0;
   vector<Fragment> ret;
 

@@ -41,7 +41,6 @@
 #include "transportinstruction.pb.h"
 #include "transportstate.h"
 #include "transportfragment.h"
-#include "prng.h"
 
 using std::list;
 using std::pair;
@@ -102,10 +101,6 @@ namespace Network {
     unsigned int SEND_MINDELAY; /* ms to collect all input */
 
     uint64_t last_heard; /* last time received new state */
-
-    /* chaff to disguise instruction length */
-    PRNG prng;
-    const string make_chaff( void );
 
     uint64_t mindelay_clock; /* time of first pending change to current state */
 

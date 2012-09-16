@@ -67,7 +67,7 @@ string SproutConnection::recv( void )
 
   if ( packet.has_forecast() ) {
     operative_forecast = packet.forecast();
-    remote_forecast_time = timestamp(); // - conn.get_SRTT()/2;
+    remote_forecast_time = timestamp(); // - conn.get_SRTT()/4;
     current_queue_bytes_estimate = conn.get_next_seq() - operative_forecast.received_or_lost_count();
     assert( current_queue_bytes_estimate >= 0 );
     current_forecast_tick = 0;

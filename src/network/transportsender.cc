@@ -66,7 +66,7 @@ TransportSender<MyState>::TransportSender( SproutConnection *s_connection, MySta
 template <class MyState>
 unsigned int TransportSender<MyState>::send_interval( void ) const
 {
-  int SEND_INTERVAL = lrint( ceil( connection->get_SRTT() / 2.0 ) );
+  int SEND_INTERVAL = lrint( ceil( connection->get_SRTT() / 4.0 ) );
   if ( SEND_INTERVAL < SEND_INTERVAL_MIN ) {
     SEND_INTERVAL = SEND_INTERVAL_MIN;
   } else if ( SEND_INTERVAL > SEND_INTERVAL_MAX ) {
@@ -161,7 +161,11 @@ void TransportSender<MyState>::tick( void )
 
   /* Determine if a new diff or empty ack needs to be sent */
 
-  string diff = current_state.diff_from( assumed_receiver_state->state, connection->window_size() );
+  int len = connection->window_size();
+  string diff;
+  if ( len > 1000 ) {
+    diff = current_state.diff_from( assumed_receiver_state->state, connection->window_size() );
+  }
 
   //  attempt_prospective_resend_optimization( diff );
 
@@ -313,7 +317,7 @@ void TransportSender<MyState>::send_in_fragments( string diff, uint64_t new_num 
 
     int time_to_next = 0;
     if ( i + 1 == fragments.end() ) {
-      time_to_next = 500;
+      time_to_next = send_interval();
     }
     connection->send( i->tostring(), time_to_next );
 

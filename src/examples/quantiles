@@ -13,7 +13,7 @@ while ( <> ) {
   $max_time = $time;
 }
 
-my $delay = 60000;
+my $delay = 0;#60000;
 
 my @input;
 for ( @input_unfiltered ) {

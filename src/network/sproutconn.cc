@@ -7,6 +7,8 @@ SproutConnection::SproutConnection( const char *desired_ip, const char *desired_
     local_forecast_time( 0 ),
     remote_forecast_time( 0 ),
     last_outgoing_ended_flight( true ),
+    current_queue_bytes_estimate( 0 ),
+    current_forecast_tick( 0 ),
     operative_forecast( conn.forecast() ) /* something reasonable */
 {}
 
@@ -15,6 +17,8 @@ SproutConnection::SproutConnection( const char *key_str, const char *ip, int por
     local_forecast_time( 0 ),
     remote_forecast_time( 0 ),
     last_outgoing_ended_flight( true ),
+    current_queue_bytes_estimate( 0 ),
+    current_forecast_tick( 0 ),
     operative_forecast( conn.forecast() ) /* something reasonable */
 {}
 
@@ -34,7 +38,27 @@ void SproutConnection::send( const string & s, uint16_t time_to_next )
 
   last_outgoing_ended_flight = ( time_to_next > 0 );
 
-  conn.send( to_send.tostring(), time_to_next );
+  const string outgoing( to_send.tostring() );
+
+  conn.send( outgoing, time_to_next );
+
+  current_queue_bytes_estimate += outgoing.size();
+  update_queue_estimate();
+}
+
+void SproutConnection::update_queue_estimate( void )
+{
+  uint64_t now = timestamp();
+  /* investigate decrementing current forecast */
+  int new_forecast_tick = std::min( int((now - remote_forecast_time) / conn.get_tick_length()),
+				    operative_forecast.counts_size() - 1 );
+
+  while ( current_forecast_tick < new_forecast_tick ) {
+    current_queue_bytes_estimate -= 1440 * operative_forecast.counts( current_forecast_tick );
+    if ( current_queue_bytes_estimate < 0 ) current_queue_bytes_estimate = 0;
+
+    current_forecast_tick++;
+  }
 }
 
 string SproutConnection::recv( void )
@@ -43,43 +67,43 @@ string SproutConnection::recv( void )
 
   if ( packet.has_forecast() ) {
     operative_forecast = packet.forecast();
-    remote_forecast_time = timestamp(); /* - (SRTT/2 ?? XXX) */
+    remote_forecast_time = timestamp(); // - conn.get_SRTT()/2;
+    current_queue_bytes_estimate = conn.get_next_seq() - operative_forecast.received_or_lost_count();
+    assert( current_queue_bytes_estimate >= 0 );
+    current_forecast_tick = 0;
+
+    update_queue_estimate();
   }
 
   return packet.data();
 }
 
-/* could be simplified to just packets_to_send = forecast@(cur+target) - dqe */
-int SproutConnection::window_size( void ) const
+int SproutConnection::window_size( void )
 {
-  uint64_t now = timestamp();
-  uint64_t delayed_queue_estimate = (conn.get_next_seq() - operative_forecast.received_or_lost_count()) / 1500;
-
-  int current_forecast_tick = (now - remote_forecast_time) / conn.get_tick_length();
-
-  if ( current_forecast_tick < 0 ) {
-    current_forecast_tick = 0;
-  } else if ( current_forecast_tick >= operative_forecast.counts_size() ) {
-    current_forecast_tick = operative_forecast.counts_size() - 1;
-  }
-
-  int current_queue_estimate = delayed_queue_estimate - operative_forecast.counts( current_forecast_tick );
-  if ( current_queue_estimate < 0 ) {
-    current_queue_estimate = 0;
-  }
+  update_queue_estimate();
 
   int cumulative_delivery_tick = current_forecast_tick + TARGET_DELAY_TICKS;
   if ( cumulative_delivery_tick >= operative_forecast.counts_size() ) {
     cumulative_delivery_tick = operative_forecast.counts_size() - 1;
   }
 
-  int cumulative_delivery_forecast = operative_forecast.counts( cumulative_delivery_tick ) - operative_forecast.counts( current_forecast_tick );
+  int cumulative_delivery_forecast = 1440 * ( operative_forecast.counts( cumulative_delivery_tick )
+					      - operative_forecast.counts( current_forecast_tick ) );
 
-  int packets_to_send = cumulative_delivery_forecast - current_queue_estimate;
+  int bytes_to_send = cumulative_delivery_forecast - current_queue_bytes_estimate;
 
-  if ( packets_to_send < 0 ) {
-    packets_to_send = 0;
+  if ( bytes_to_send < 0 ) {
+    bytes_to_send = 0;
   }
 
-  return packets_to_send * 1440;
+  /*
+  if ( bytes_to_send > 0 ) {
+    fprintf( stderr, "From tick %d(%d) => %d(%d), %d bytes to send with %d already sent\n",
+	     current_forecast_tick, operative_forecast.counts( current_forecast_tick ),
+	     cumulative_delivery_tick, operative_forecast.counts( cumulative_delivery_tick ),
+	     bytes_to_send, current_queue_bytes_estimate );
+  }
+  */
+
+  return bytes_to_send;
 }

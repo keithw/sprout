@@ -212,19 +212,10 @@ string Session::encrypt( Message plaintext )
 
 Message Session::decrypt( string ciphertext )
 {
-  if ( ciphertext.size() < 24 ) {
-    throw CryptoException( "Ciphertext must contain nonce and tag." );
-  }
-
   char *str = (char *)ciphertext.data();
 
   int body_len = ciphertext.size() - 8;
-  int pt_len = body_len - 16;
-
-  if ( pt_len < 0 ) { /* super-assertion that pt_len does not equal AE_INVALID */
-    fprintf( stderr, "BUG.\n" );
-    exit( 1 );
-  }
+  int pt_len = body_len;
 
   assert( (size_t)body_len <= ciphertext_buffer.len() );
   assert( (size_t)pt_len <= plaintext_buffer.len() );

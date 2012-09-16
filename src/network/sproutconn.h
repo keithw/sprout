@@ -66,8 +66,12 @@ namespace Network {
     uint64_t local_forecast_time;
     uint64_t remote_forecast_time;
     bool last_outgoing_ended_flight;
+    int current_queue_bytes_estimate;
+    int current_forecast_tick;
 
     Sprout::DeliveryForecast operative_forecast;
+
+    void update_queue_estimate( void );
 
   public:
     SproutConnection( const char *desired_ip, const char *desired_port ); /* server */
@@ -88,7 +92,7 @@ namespace Network {
     uint64_t get_next_seq( void ) const { return conn.get_next_seq(); }
     int get_tick_length( void ) const { return conn.get_tick_length(); }
 
-    int window_size( void ) const;
+    int window_size( void );
   };
 }
 

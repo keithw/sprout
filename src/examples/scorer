@@ -51,4 +51,8 @@ while ( <> ) {
   $last_packet_sent = $new_last_packet_sent;
 }
 
-printf STDERR "Used $used / $available => %f %% \n", 100.0 * $used / $available;
+my $total_secs = $time / 1000.0;
+
+print STDERR "used: $used, available: $available\n";
+printf STDERR "Used %.0f kbps / %.0f kbps => %f %% \n", .001 * $used * 8 / $total_secs,
+    .001 * $available * 8 / $total_secs, 100.0 * $used / $available;

@@ -234,23 +234,18 @@ void TransportSender<MyState>::add_sent_state( uint64_t the_timestamp, uint64_t 
 template <class MyState>
 void TransportSender<MyState>::send_to_receiver( string diff )
 {
-  uint64_t new_num;
-  if ( current_state == sent_states.back().state ) { /* previously sent */
-    new_num = sent_states.back().num;
-  } else { /* new state */
-    new_num = sent_states.back().num + 1;
-  }
+  uint64_t new_num = sent_states.back().num + 1; /* always increment state number for lossy SSP */
 
   /* special case for shutdown sequence */
   if ( shutdown_in_progress ) {
     new_num = uint64_t( -1 );
   }
 
-  if ( new_num == sent_states.back().num ) {
-    sent_states.back().timestamp = timestamp();
-  } else {
-    add_sent_state( timestamp(), new_num, current_state );
-  }
+  /* find lossy target state */
+  MyState newstate( assumed_receiver_state->state );
+  newstate.apply_string( diff );
+
+  add_sent_state( timestamp(), new_num, newstate );
 
   send_in_fragments( diff, new_num ); // Can throw NetworkException
 

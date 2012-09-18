@@ -135,17 +135,24 @@ int TransportSender<MyState>::wait_time( void )
     return INT_MAX;
   }
 
-  if ( next_wakeup > now ) {
-    return next_wakeup - now;
-  } else {
-    return 0;
+  int ret = next_wakeup - now;
+  if ( connection->get_tick_length() < ret ) {
+    ret = connection->get_tick_length();
   }
+
+  if ( ret < 0 ) {
+    ret = 0;
+  }
+
+  return ret;
 }
 
 /* Send data or an empty ack if necessary */
 template <class MyState>
 void TransportSender<MyState>::tick( void )
 {
+  connection->tick(); /* send out queue if there is one */
+
   calculate_timers(); /* updates assumed receiver state and rationalizes */
 
   if ( !connection->get_has_remote_addr() ) {
@@ -319,7 +326,7 @@ void TransportSender<MyState>::send_in_fragments( string diff, uint64_t new_num 
     if ( i + 1 == fragments.end() ) {
       time_to_next = send_interval();
     }
-    connection->send( i->tostring(), time_to_next );
+    connection->queue_to_send( i->tostring(), time_to_next );
 
     if ( verbose ) {
       fprintf( stderr, "[%u] Sent [%d=>%d] id %d, frag %d ack=%d, throwaway=%d, len=%d, frame rate=%.2f, timeout=%d, srtt=%.1f\n",

@@ -73,11 +73,14 @@ namespace Network {
 
     void update_queue_estimate( void );
 
+    std::deque< std::pair< const string, uint16_t > > outgoing_queue;
+
   public:
     SproutConnection( const char *desired_ip, const char *desired_port ); /* server */
     SproutConnection( const char *key_str, const char *ip, int port ); /* client */
 
     void send( const string & s, uint16_t time_to_next = 0 );
+    void queue_to_send( const string & s, uint16_t time_to_next = 0 );
     string recv( void );
 
     int fd( void ) const { return conn.fd(); }
@@ -93,6 +96,8 @@ namespace Network {
     int get_tick_length( void ) const { return conn.get_tick_length(); }
 
     int window_size( void );
+
+    void tick( void );
   };
 }
 

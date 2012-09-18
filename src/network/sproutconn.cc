@@ -9,7 +9,8 @@ SproutConnection::SproutConnection( const char *desired_ip, const char *desired_
     last_outgoing_ended_flight( true ),
     current_queue_bytes_estimate( 0 ),
     current_forecast_tick( 0 ),
-    operative_forecast( conn.forecast() ) /* something reasonable */
+    operative_forecast( conn.forecast() ), /* something reasonable */
+    outgoing_queue()
 {}
 
 SproutConnection::SproutConnection( const char *key_str, const char *ip, int port )
@@ -19,7 +20,8 @@ SproutConnection::SproutConnection( const char *key_str, const char *ip, int por
     last_outgoing_ended_flight( true ),
     current_queue_bytes_estimate( 0 ),
     current_forecast_tick( 0 ),
-    operative_forecast( conn.forecast() ) /* something reasonable */
+    operative_forecast( conn.forecast() ), /* something reasonable */
+    outgoing_queue()
 {}
 
 void SproutConnection::send( const string & s, uint16_t time_to_next )
@@ -92,6 +94,13 @@ int SproutConnection::window_size( void )
 
   int bytes_to_send = cumulative_delivery_forecast - current_queue_bytes_estimate;
 
+  /* also consider outgoing queue */
+  /* a more precise calculation would estimate whether we are going to be
+     including a forecast */
+  for ( auto it = outgoing_queue.begin(); it != outgoing_queue.end(); it++ ) {
+    bytes_to_send -= it->first.size();
+  }
+
   if ( bytes_to_send < 0 ) {
     bytes_to_send = 0;
   }
@@ -106,4 +115,34 @@ int SproutConnection::window_size( void )
   */
 
   return bytes_to_send;
+}
+
+void SproutConnection::queue_to_send( const string & s, uint16_t time_to_next )
+{
+  outgoing_queue.push_back( make_pair( s, time_to_next ) );
+}
+
+void SproutConnection::tick( void )
+{
+  if ( outgoing_queue.empty() ) {
+    return;
+  }
+
+  while ( (!outgoing_queue.empty())
+	  && (window_size() >= (int)outgoing_queue.front().first.size()) ) {
+    /* send it */
+    const string s = outgoing_queue.front().first;
+    uint16_t time_to_next = outgoing_queue.front().second;
+    outgoing_queue.pop_front();
+
+    /* what should the time-to-next be? */
+    /* will we also probably send the next packet? */
+    if ( (!outgoing_queue.empty())
+	 && (window_size() - s.size() - 20 >= outgoing_queue.front().first.size()) ) {
+      /* allowance for overhead */
+      time_to_next = 0;
+    }
+
+    send( s, time_to_next );
+  }
 }

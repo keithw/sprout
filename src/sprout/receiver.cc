@@ -69,9 +69,12 @@ Sprout::DeliveryForecast Receiver::forecast( void )
     _cached_forecast.set_time( _time );
     _cached_forecast.clear_counts();
 
+    int ticknum = 1;
+
     for ( auto it = _forecastr.begin(); it != _forecastr.end(); it++ ) {
       //      _cached_forecast.add_counts( it->lower_quantile( _process, 0.05 ) );
-      _cached_forecast.add_counts( _ewma_rate_estimate );
+      _cached_forecast.add_counts( _ewma_rate_estimate * ticknum );
+      ticknum++;
     }
 
     return _cached_forecast;

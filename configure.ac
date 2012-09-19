@@ -5,7 +5,7 @@ AC_PREREQ([2.61])
 AC_INIT([alfalfa], [1.2.2], [mosh-devel@mit.edu])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-AC_CONFIG_SRCDIR([src/frontend/mosh-client.cc])
+AC_CONFIG_SRCDIR([src/examples/ntester.cc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 

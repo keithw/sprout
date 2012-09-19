@@ -56,6 +56,8 @@ private:
 
   RecvQueue _recv_queue;
 
+  double _ewma_rate_estimate;
+
 public:
 
   Receiver();

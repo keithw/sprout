@@ -13,7 +13,8 @@ Receiver::Receiver()
     _score_time( -1 ),
     _count_this_tick( 0 ),
     _cached_forecast(),
-    _recv_queue()
+    _recv_queue(),
+    _ewma_rate_estimate( 0 )
 {
   for ( int i = 0; i < NUM_TICKS; i++ ) {
     ProcessForecastInterval one_forecast( .001 * TICK_LENGTH,
@@ -36,6 +37,9 @@ void Receiver::advance_to( const uint64_t time )
 	discrete_observe = 1;
       }
       _process.observe( .001 * TICK_LENGTH, discrete_observe );
+
+      const double alpha = 1.0 / 8.0;
+      _ewma_rate_estimate = (1 - alpha) * _ewma_rate_estimate + ( alpha * _count_this_tick );
       //      fprintf( stderr, "tick(%f) ", _count_this_tick );
       _count_this_tick = 0;
     } else {
@@ -66,7 +70,8 @@ Sprout::DeliveryForecast Receiver::forecast( void )
     _cached_forecast.clear_counts();
 
     for ( auto it = _forecastr.begin(); it != _forecastr.end(); it++ ) {
-      _cached_forecast.add_counts( it->lower_quantile( _process, 0.05 ) );
+      //      _cached_forecast.add_counts( it->lower_quantile( _process, 0.05 ) );
+      _cached_forecast.add_counts( _ewma_rate_estimate );
     }
 
     return _cached_forecast;

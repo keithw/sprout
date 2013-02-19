@@ -3,6 +3,7 @@
 use strict;
 
 my $time = -1;
+my $initial_time = -1;
 my $last_packet_sent = -1;
 my $desired_direction = shift @ARGV;
 
@@ -11,8 +12,6 @@ print STDERR "Looking at direction $desired_direction...\n";
 my $used = 0;
 my $available = 0;
 
-my $tsoffset = -1;
-
 while ( <> ) {
   chomp;
   my ( $dir, $new_time, $del, $ms_old ) = split /\s+/, $_;
@@ -20,12 +19,6 @@ while ( <> ) {
   next unless $dir eq $desired_direction;
 
   $new_time = int( $new_time * 1000 + 0.5 );
-
-  if ( $tsoffset == -1 ) {
-    $tsoffset = $new_time;
-  }
-
-#  $new_time -= $tsoffset;
 
   next unless ( $new_time >= 60000 );
 
@@ -38,6 +31,7 @@ while ( <> ) {
 
   if ( $time == -1 ) {
     $time = $new_time;
+    $initial_time = $time;
   }
 
   while ( $time < $new_time ) {
@@ -51,7 +45,7 @@ while ( <> ) {
   $last_packet_sent = $new_last_packet_sent;
 }
 
-my $total_secs = $time / 1000.0;
+my $total_secs = ($time - $initial_time) / 1000.0;
 
 print STDERR "used: $used, available: $available\n";
 printf STDERR "Used %.0f kbps / %.0f kbps => %f %% \n", .001 * $used * 8 / $total_secs,

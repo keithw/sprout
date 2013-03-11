@@ -30,13 +30,13 @@ void Receiver::advance_to( const uint64_t time )
   assert( time >= _time );
 
   while ( _time + TICK_LENGTH < time ) {
-    _process.evolve( .001 * TICK_LENGTH );
+    //    _process.evolve( .001 * TICK_LENGTH );
     if ( (_time >= _score_time) || (_count_this_tick > 0) ) {
-      int discrete_observe = int( _count_this_tick + 0.5 );
-      if ( _count_this_tick > 0 && _count_this_tick < 1 ) {
-	discrete_observe = 1;
-      }
-      _process.observe( .001 * TICK_LENGTH, discrete_observe );
+      //      int discrete_observe = int( _count_this_tick + 0.5 );
+      //      if ( _count_this_tick > 0 && _count_this_tick < 1 ) {
+      //	discrete_observe = 1;
+      //      }
+      //      _process.observe( .001 * TICK_LENGTH, discrete_observe );
 
       const double alpha = 1.0 / 8.0;
       _ewma_rate_estimate = (1 - alpha) * _ewma_rate_estimate + ( alpha * _count_this_tick );

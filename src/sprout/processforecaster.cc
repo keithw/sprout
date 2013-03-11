@@ -79,38 +79,18 @@ std::vector< double > ProcessForecastInterval::convolve( const std::vector< doub
   return ret;
 }
 
-ProcessForecastInterval::ProcessForecastInterval( const double tick_time,
-						  const Process & example,
-						  const unsigned int tick_upper_limit,
+ProcessForecastInterval::ProcessForecastInterval( const double tick_time __attribute((unused)),
+						  const Process & example __attribute((unused)),
+						  const unsigned int tick_upper_limit __attribute((unused)),
 						  const unsigned int num_ticks )
   : _count_probability()
 {
-  /* step 1: make the component processes */
-  std::vector< Process > components( ProcessForecastTick::make_components( example ) );
+  /* step 1: make the (fake) component processes */
+  std::vector< bool > components( num_ticks, true );
  
-  /* step 2: make the tick forecast */
-  ProcessForecastTick tick_forecast( tick_time, example, tick_upper_limit );
-
-  /* step 3: for each component, integrate and evolve forward */
+  /* step 3: fill in with zeros */
   for ( auto it = components.begin(); it != components.end(); it++ ) {
-    std::vector< double > this_component_count_probability( 1, 1.0 );
-    for ( unsigned int tick = 0; tick < num_ticks; tick++ ) {
-      /* collect tick forecast */
-      std::vector< double > this_tick;
-      for ( unsigned int i = 0; i < tick_upper_limit; i++ ) {
-	it->normalize();
-	this_tick.push_back( tick_forecast.probability( *it, i ) );
-      }
-
-      /* add to previous forecast */
-      this_component_count_probability = convolve( this_component_count_probability,
-						   this_tick );
-
-      /* evolve forward */
-      it->evolve( tick_time );
-    }
-
-    _count_probability.push_back( this_component_count_probability );
+    _count_probability.push_back( std::vector< double >( 1, 0.0 ) );
   }
 }
 

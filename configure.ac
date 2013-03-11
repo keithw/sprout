@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([alfalfa], [1.2.2], [mosh-devel@mit.edu])
+AC_INIT([alfalfa], [2.0b], [alfalfa@mit.edu])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_SRCDIR([src/examples/sproutbt2.cc])
@@ -74,9 +74,9 @@ AC_DEFUN([check_link_flag],
 
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--enable-hardening],
-    [Enable compiler and linker options to frustrate memory corruption exploits @<:@yes@:>@])],
+    [Enable compiler and linker options to frustrate memory corruption exploits @<:@no@:>@])],
   [hardening="$enableval"],
-  [hardening="yes"])
+  [hardening="no"])
 
 HARDEN_CFLAGS=""
 HARDEN_LDFLAGS=""
@@ -124,53 +124,11 @@ CC="$saved_CC"
 CXX="$saved_CXX"
 LD="$saved_LD"
 
-AC_ARG_ENABLE([client],
-  [AS_HELP_STRING([--enable-client], [Build the mosh-client program @<:@yes@:>@])],
-  [build_client="$enableval"],
-  [build_client="yes"])
-AM_CONDITIONAL([BUILD_CLIENT], [test x"$build_client" != xno])
-
-AC_ARG_ENABLE([server],
-  [AS_HELP_STRING([--enable-server], [Build the mosh-server program @<:@yes@:>@])],
-  [build_server="$enableval"],
-  [build_server="yes"])
-AM_CONDITIONAL([BUILD_SERVER], [test x"$build_server" != xno])
-
-AC_ARG_ENABLE([tests],
-  [AS_HELP_STRING([--enable-tests], [Build tests @<:@no@:>@])],
-  [build_tests="$enableval"],
-  [build_tests="no"])
-AM_CONDITIONAL([BUILD_TESTS], [test x"$build_tests" != xno])
-
 AC_ARG_ENABLE([examples],
-  [AS_HELP_STRING([--enable-examples], [Build the miscellaneous programs in src/examples @<:@no@:>@])],
+  [AS_HELP_STRING([--enable-examples], [Build the miscellaneous programs in src/examples @<:@yes@:>@])],
   [build_examples="$enableval"],
-  [build_examples="no"])
+  [build_examples="yes"])
 AM_CONDITIONAL([BUILD_EXAMPLES], [test x"$build_examples" != xno])
-
-AC_ARG_ENABLE([ufw],
-  [AS_HELP_STRING([--enable-ufw], [Install firewall profile for ufw (Uncomplicated Firewall) @<:@no@:>@])],
-  [install_ufw="$enableval"],
-  [install_ufw="no"])
-AM_CONDITIONAL([INSTALL_UFW], [test x"$install_ufw" != xno])
-
-AC_ARG_ENABLE([completion],
-  [AS_HELP_STRING([--enable-completion], [Install bash_completion rule @<:@no@:>@])],
-  [install_completion="$enableval"],
-  [install_completion="no"])
-AM_CONDITIONAL([INSTALL_COMPLETION], [test x"$install_completion" != xno])
-
-# Checks for libraries.
-AC_ARG_WITH([utempter],
-  [AS_HELP_STRING([--with-utempter], [write utmp entries using libutempter @<:@check@:>@])],
-  [with_utempter="$withval"],
-  [with_utempter="check"])
-AS_IF([test x"$with_utempter" != xno],
-  [AC_SEARCH_LIBS([utempter_remove_record], [utempter],
-    [AC_DEFINE([HAVE_UTEMPTER], [1], [Define if libutempter is available.])],
-    [AS_IF([test x"$with_utempter" = xcheck],
-      [AC_MSG_WARN([Unable to find libutempter; utmp entries will not be made.])],
-      [AC_MSG_ERROR([--with-utempter was given but libutempter was not found.])])])])
 
 AC_SEARCH_LIBS([compress], [z], , [AC_MSG_ERROR([Unable to find zlib.])])
 
@@ -301,17 +259,11 @@ AC_CONFIG_FILES([
   Makefile
   src/Makefile
   src/crypto/Makefile
-  src/frontend/Makefile
   src/network/Makefile
   src/protobufs/Makefile
   src/statesync/Makefile
-  src/terminal/Makefile
   src/util/Makefile
-  scripts/Makefile
   src/examples/Makefile
-  src/tests/Makefile
   src/sprout/Makefile
-  man/Makefile
-  conf/Makefile
 ])
 AC_OUTPUT

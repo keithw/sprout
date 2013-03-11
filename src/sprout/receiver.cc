@@ -15,13 +15,17 @@ Receiver::Receiver()
     _cached_forecast(),
     _recv_queue()
 {
+  fprintf( stderr, "Starting statistical calculations..." );
   for ( int i = 0; i < NUM_TICKS; i++ ) {
+    fprintf( stderr, "[tick %d", i );
     ProcessForecastInterval one_forecast( .001 * TICK_LENGTH,
 					  _process,
 					  MAX_ARRIVALS_PER_TICK,
 					  i + 1 );
     _forecastr.push_back( one_forecast );
+    fprintf( stderr, "] " );
   }
+  fprintf( stderr, " done.\n" );
 }
 
 void Receiver::advance_to( const uint64_t time )

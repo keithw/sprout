@@ -1,0 +1,13 @@
+package Sprout;
+
+message ProcessForecastInterval {
+  repeated CountProbability count_probabilities = 1;
+}
+
+message CountProbability {
+  repeated double count_probability = 2;
+}
+
+message SproutModel {
+  repeated ProcessForecastInterval intervals = 3;
+}

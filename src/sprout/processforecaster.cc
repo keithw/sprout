@@ -147,3 +147,28 @@ unsigned int ProcessForecastInterval::lower_quantile( const Process & ensemble, 
 
   return _count_probability[ 0 ].size() + 1;
 }
+
+/* construct from saved protobuf */
+ProcessForecastInterval::ProcessForecastInterval( const Sprout::ProcessForecastInterval &storedmodel )
+  : _count_probability()
+{
+  for ( int i = 0; i < storedmodel.count_probabilities_size(); i++ ) {
+    std::vector< double > this_component_count_probability;
+    for ( int j = 0; j < storedmodel.count_probabilities( i ).count_probability_size(); j++ ) {
+      this_component_count_probability.push_back( storedmodel.count_probabilities( i ).count_probability( j ) );
+    }
+    _count_probability.push_back( this_component_count_probability );
+  }
+}
+
+Sprout::ProcessForecastInterval ProcessForecastInterval::to_protobuf( void ) const
+{
+  Sprout::ProcessForecastInterval ret;
+  for ( unsigned int i = 0; i < _count_probability.size(); i++ ) {
+    auto *this_component = ret.add_count_probabilities();
+    for ( unsigned int j = 0; j < _count_probability.at( i ).size(); j++ ) {
+      this_component->add_count_probability( _count_probability.at( i ).at( j ) );
+    }
+  }
+  return ret;
+}

@@ -1,7 +1,13 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "receiver.hh"
+#include "sproutmath.pb.h"
 
 Receiver::Receiver()
   : _process( MAX_ARRIVAL_RATE,
@@ -15,17 +21,82 @@ Receiver::Receiver()
     _cached_forecast(),
     _recv_queue()
 {
-  fprintf( stderr, "Starting statistical calculations..." );
-  for ( int i = 0; i < NUM_TICKS; i++ ) {
-    fprintf( stderr, "[tick %d", i );
-    ProcessForecastInterval one_forecast( .001 * TICK_LENGTH,
-					  _process,
-					  MAX_ARRIVALS_PER_TICK,
-					  i + 1 );
-    _forecastr.push_back( one_forecast );
-    fprintf( stderr, "] " );
+  char *filename_in = getenv( "SPROUT_MODEL_IN" );
+  if ( filename_in ) {
+    /* try to open */
+    int fd = open( filename_in, O_RDONLY );
+    if ( fd < 0 ) {
+      fprintf( stderr, "Could not open %s.\n", filename_in );
+      perror( "open" );
+      exit( 1 );
+    }
+
+    fprintf( stderr, "Reading model from %s...", filename_in );
+
+    Sprout::SproutModel model;
+    if ( !model.ParseFromFileDescriptor( fd ) ) {
+      fprintf( stderr, "Could not parse %s.\n", filename_in );
+      exit( 1 );
+    }
+
+    assert( model.intervals_size() == NUM_TICKS );
+
+    for ( int i = 0; i < NUM_TICKS; i++ ) {
+      fprintf( stderr, "[tick %d", i );
+      ProcessForecastInterval one_forecast( model.intervals( i ) );
+      _forecastr.push_back( one_forecast );
+      fprintf( stderr, "] " );
+    }
+    fprintf( stderr, " done.\n" );
+
+    if ( close( fd ) < 0 ) {
+      perror( "close" );
+      exit( 1 );
+    }
+  } else {
+    fprintf( stderr, "Starting statistical calculations..." );
+    for ( int i = 0; i < NUM_TICKS; i++ ) {
+      fprintf( stderr, "[tick %d", i );
+      ProcessForecastInterval one_forecast( .001 * TICK_LENGTH,
+					    _process,
+					    MAX_ARRIVALS_PER_TICK,
+					    i + 1 );
+      _forecastr.push_back( one_forecast );
+      fprintf( stderr, "] " );
+    }
+    fprintf( stderr, " done.\n" );
   }
-  fprintf( stderr, " done.\n" );
+
+  char *filename_out = getenv( "SPROUT_MODEL_OUT" );
+  if ( filename_out ) {
+    /* try to open */
+    int fd = open( filename_out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR );
+    if ( fd < 0 ) {
+      fprintf( stderr, "Could not open %s.\n", filename_out );
+      perror( "open" );
+      exit( 1 );
+    }
+
+    fprintf( stderr, "Writing model to %s...", filename_out );
+  
+    Sprout::SproutModel model;
+    for ( int i = 0; i < NUM_TICKS; i++ ) {
+      auto *x = model.add_intervals();
+      *x = _forecastr.at( i ).to_protobuf();
+    }
+    
+    if ( !model.SerializeToFileDescriptor( fd ) ) {
+      fprintf( stderr, "Could not serialize model.\n" );
+      exit( 1 );
+    }
+
+    if ( close( fd ) < 0 ) {
+      perror( "close" );
+      exit( 1 );
+    }
+
+    fprintf( stderr, "done.\n" );
+  }
 }
 
 void Receiver::advance_to( const uint64_t time )

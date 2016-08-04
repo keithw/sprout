@@ -2,6 +2,7 @@
 #include <string>
 #include <assert.h>
 #include <list>
+#include <iostream>
 
 #include "sproutconn.h"
 #include "select.h"
@@ -29,9 +30,9 @@ int main( int argc, char *argv[] )
     net = new Network::SproutConnection( "4h/Td1v//4jkYhqhLGgegw", ip, port );
   } else {
     net = new Network::SproutConnection( NULL, NULL );
-  }
 
-  fprintf( stderr, "Port bound is %d\n", net->port() );
+    cout << "Listening on port: " << net->port() << endl;
+  }
 
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );

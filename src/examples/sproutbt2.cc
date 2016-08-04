@@ -29,9 +29,9 @@ int main( int argc, char *argv[] )
     net = new Network::SproutConnection( "4h/Td1v//4jkYhqhLGgegw", ip, port );
   } else {
     net = new Network::SproutConnection( NULL, NULL );
-  }
 
-  fprintf( stderr, "Port bound is %d\n", net->port() );
+    printf( "Listening on port: %d\n", net->port() );
+  }
 
   Select &sel = Select::get_instance();
   sel.add_fd( net->fd() );

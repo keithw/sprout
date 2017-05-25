@@ -19,7 +19,7 @@ int main( int argc, char *argv[] )
 
   bool server = true;
 
-  if ( argc > 1 ) {
+  if ( argc > 2 ) {
     /* client */
 
     server = false;
@@ -28,6 +28,10 @@ int main( int argc, char *argv[] )
     port = atoi( argv[ 2 ] );
 
     net = new Network::SproutConnection( "4h/Td1v//4jkYhqhLGgegw", ip, port );
+  } else if ( argc == 2 ) {
+    net = new Network::SproutConnection( NULL, argv[ 1 ] );
+
+    printf( "Listening on port: %d\n", net->port() );
   } else {
     net = new Network::SproutConnection( NULL, NULL );
 

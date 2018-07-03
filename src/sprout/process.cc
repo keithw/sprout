@@ -88,12 +88,12 @@ void Process::evolve( const double time )
 								* ( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate )
 								    - _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) );
 
-							      assert( !isnan( zfactor ) );
-							      assert( !isnan( old_prob ) );
-							      assert( !isnan( new_rate ) );
-							      assert( !isnan( old_rate ) );
-							      assert( !isnan( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate ) ) );
-							      assert( !isnan( _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) ) );
+							      assert( !std::isnan( zfactor ) );
+							      assert( !std::isnan( old_prob ) );
+							      assert( !std::isnan( new_rate ) );
+							      assert( !std::isnan( old_rate ) );
+							      assert( !std::isnan( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate ) ) );
+							      assert( !std::isnan( _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) ) );
 
 							      assert( contribution >= 0.0 );
 							      assert( contribution <= 1.0 );
